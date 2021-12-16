@@ -26,7 +26,7 @@ public interface Engine extends Serializable {
     Set<List<String>> findAllPathsBetweenTargets(String start, String end);
 
     void runTaskOnGraph(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
-                        boolean isIncremental, boolean isSimulation, Consumer<String> print);
+                        boolean isIncremental, Consumer<String> print, boolean isSimulation);
 
     boolean isGraphAccessible();
 }

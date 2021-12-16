@@ -13,8 +13,8 @@ public class SimulationTask implements Task, Serializable {
     private int msToRun;
     private boolean isRandom;
     private double successRate;
-    private List<String> waitingList = new LinkedList<>();
     private double successfulWithWarningRate;
+    private List<String> waitingList = new LinkedList<>();
     private Map<String, SimulationTarget> graph = new HashMap<>();
     private List<accumulatorForWritingToFile> logData = new LinkedList<>();
     boolean allGraphHasBeenProcessed;
@@ -268,7 +268,7 @@ public class SimulationTask implements Task, Serializable {
 
         resOfTargetTaskRun.outPutData.add(
                 "4. targets opened to execution by this operation:\n" + (resOfTargetTaskRun.targetOpened.isEmpty() ?
-                "no targets opened" : resOfTargetTaskRun.targetOpened));
+                        "no targets opened" : resOfTargetTaskRun.targetOpened));
 
         if (targetToExecute.state.equals(Target.TargetState.FAILURE)) {
             resOfTargetTaskRun.outPutData.add("5. targets that will be skipped due to: " + targetToExecute.name + "'s failure:\n" +

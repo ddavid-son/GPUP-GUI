@@ -12,6 +12,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class Execution implements Engine, Serializable {
     private Task task;
@@ -19,6 +20,7 @@ public class Execution implements Engine, Serializable {
     private GraphManager graphManager;
     private final static String JAXB_XML_GENERATED_CLASSES_PATH = "backend.xmlhandler";
 
+    //----------------------------------------- read/write state from/to file ----------------------------------------//
     @Override
     public void readObjectFromFile(String filePath) {
         checkIfFileExists(filePath + ".dat");
@@ -77,8 +79,10 @@ public class Execution implements Engine, Serializable {
         }
         return path;
     }
+    //----------------------------------------- read/write state from/to file ----------------------------------------//
 
 
+    //------------------------------------------- find all paths and circle ------------------------------------------//
     @Override
     public Set<List<String>> findAllPathsBetweenTargets(String start, String end) {
         checkIfGraphIsLoaded();
@@ -100,8 +104,10 @@ public class Execution implements Engine, Serializable {
 
         return graphManager.findCircle(targetName.toUpperCase(Locale.ROOT), visited);
     }
+    //------------------------------------------- find all paths and circle ------------------------------------------//
 
 
+    //---------------------------------------------- info about target -----------------------------------------------//
     @Override
     public InfoAboutTargetDTO getInfoAboutTarget(String targetName) {
         checkIfGraphIsLoaded();
@@ -116,10 +122,13 @@ public class Execution implements Engine, Serializable {
                 graphManager.getRequiredForOfByName(targetName)
         );
     }
+    //----------------------------------------------- info about info ------------------------------------------------//
 
+
+    //--------------------------------------------------- run task --------------------------------------------------//
     @Override
     public void runTaskOnGraph(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
-                               boolean isIncremental, boolean isSimulation, Consumer<String> print) {
+                               boolean isIncremental, Consumer<String> print, boolean isSimulation) {
 
         checkIfGraphIsLoaded();
 
@@ -140,7 +149,10 @@ public class Execution implements Engine, Serializable {
 
         task.run(print);
     }
+    //--------------------------------------------------- run task ---------------------------------------------------//
 
+
+    //---------------------------------------------- info about graph ------------------------------------------------//
     @Override
     public GraphTargetsTypeInfoDTO getGraphInfo() {
         checkIfGraphIsLoaded();
@@ -154,21 +166,11 @@ public class Execution implements Engine, Serializable {
 
         return graphTargetsTypeInfoDTO;
     }
+    //---------------------------------------------- info about graph ------------------------------------------------//
 
-    public void checkIfGraphIsLoaded() {
-        getGraphManagerOptional().orElseThrow(() ->
-                new IllegalArgumentException("you need to load a valid XML file first"));
-    }
 
-    public Optional<GraphManager> getGraphManagerOptional() {
-        return Optional.ofNullable(graphManager);
-    }
-
+    //---------------------------------------------- load graph from xml ---------------------------------------------//
     @Override
-    public boolean isGraphAccessible() {
-        return graphManager == null;
-    }
-
     public void xmlFileLoadingHandler(String xmlFilePath) {
         handleError(fileValidityTests(xmlFilePath));
 
@@ -187,7 +189,6 @@ public class Execution implements Engine, Serializable {
         graphManager = new GraphManager(gpupTargets.size(), gpupTargets);
     }
 
-    // logic validation for file
     private void handleError(String errorMessage) {
         if (!errorMessage.isEmpty())
             throw new IllegalArgumentException(errorMessage);
@@ -210,6 +211,24 @@ public class Execution implements Engine, Serializable {
         Unmarshaller u = jc.createUnmarshaller();
         return (GPUPDescriptor) u.unmarshal(in);
     }
+    //---------------------------------------------- load graph from xml ---------------------------------------------//
+
+
+    //------------------------------------------------ ctor and utils ------------------------------------------------//
+    public void checkIfGraphIsLoaded() {
+        getGraphManagerOptional().orElseThrow(() ->
+                new IllegalArgumentException("you need to load a valid XML file first"));
+    }
+
+    @Override
+    public boolean isGraphAccessible() {
+        return graphManager == null;
+    }
+
+    public Optional<GraphManager> getGraphManagerOptional() {
+
+        return Optional.ofNullable(graphManager);
+    }
 
     public String checkIfDataIsValid(GPUPDescriptor instance) {
         String errorMessage;
@@ -225,10 +244,36 @@ public class Execution implements Engine, Serializable {
 
         errorMessage = buildTempGraphForValidation(targetList, string2TempTargetMap);
 
-        if (errorMessage.isEmpty())
-            errorMessage = checkForLoopsOfSize2(string2TempTargetMap);
+        errorMessage = validateTempGraphHelper(instance, string2TempTargetMap);
 
         return errorMessage;
+    }
+
+    private String validateTempGraphHelper(GPUPDescriptor instance, Map<String, TempTarget> string2TempTargetMap) {
+        String errorMessage = checkForLoopsOfSize2(string2TempTargetMap);
+        try {
+            if (errorMessage.isEmpty())
+                checkAllSerialSetsAreValid(instance, string2TempTargetMap);
+        } catch (Exception e) {
+            errorMessage = e.getMessage();
+        }
+
+        return errorMessage;
+    }
+
+    private void checkAllSerialSetsAreValid(GPUPDescriptor instance, Map<String, TempTarget> string2TempTargetMap) {
+        List<GPUPDescriptor.GPUPSerialSets.GPUPSerialSet> serialSetList = instance.getGPUPSerialSets().getGPUPSerialSet();
+        serialSetList.forEach(s -> {
+            Arrays.stream(s.getTargets()
+                            .split(","))
+                    .collect(Collectors.toList())
+                    .forEach(t -> {
+                        if (!string2TempTargetMap.containsKey(t))
+                            throw new IllegalArgumentException(
+                                    "error: serial set: " + s.getName() +
+                                            " contains a target that is not defined in the graph");
+                    });
+        });
     }
 
     private String checkForLoopsOfSize2(Map<String, TempTarget> string2TempTargetMap) {
@@ -236,17 +281,6 @@ public class Execution implements Engine, Serializable {
             for (String neighbourName : tempTarget.neighboursNames) {
                 if (string2TempTargetMap.get(neighbourName).neighboursNames.contains(tempTarget.name))
                     return "error: there is a circle of size 2 between " + tempTarget.name + " and " + neighbourName;
-            }
-        }
-
-        return "";
-    }
-
-    private String buildTempGraphForValidation(List<GPUPTarget> targetList, Map<String, TempTarget> string2TempTargetMap) {
-        for (GPUPTarget target : targetList) {
-            if (target.getGPUPTargetDependencies() != null) {
-                String errorMessage = tempGraphBuilder(string2TempTargetMap, target);
-                if (!errorMessage.isEmpty()) return errorMessage;
             }
         }
 
@@ -261,13 +295,26 @@ public class Execution implements Engine, Serializable {
 
             if (edge.getType().equals("dependsOn")) {
                 string2TempTargetMap.get(target.getName()).neighboursNames.add(edge.getValue());
-            } else { // maybe needs to be more explicit and write "requiredFor"
+            } else {
                 string2TempTargetMap.get(edge.getValue()).neighboursNames.add(target.getName());
             }
         }
 
         return "";
     }
+
+    private String buildTempGraphForValidation
+            (List<GPUPTarget> targetList, Map<String, TempTarget> string2TempTargetMap) {
+        for (GPUPTarget target : targetList) {
+            if (target.getGPUPTargetDependencies() != null) {
+                String errorMessage = tempGraphBuilder(string2TempTargetMap, target);
+                if (!errorMessage.isEmpty()) return errorMessage;
+            }
+        }
+
+        return "";
+    }
+    //------------------------------------------------ ctor and utils ------------------------------------------------//
 
     private static class TempTarget {
         String name;
@@ -278,5 +325,4 @@ public class Execution implements Engine, Serializable {
             this.neighboursNames = new ArrayList<>();
         }
     }
-
 }
