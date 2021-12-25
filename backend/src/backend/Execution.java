@@ -118,10 +118,11 @@ public class Execution implements Engine, Serializable {
                 targetName,
                 graphManager.getTypeOf(targetName),
                 graphManager.getTargetUserData(targetName),
-                graphManager.getDependsOnOfByName(targetName),
-                graphManager.getRequiredForOfByName(targetName)
+                graphManager.getAllRelatedOn(targetName, GraphManager.RelationType.DEPENDS_ON),
+                graphManager.getAllRelatedOn(targetName, GraphManager.RelationType.REQUIRED_FOR)
         );
     }
+
     //----------------------------------------------- info about info ------------------------------------------------//
 
 

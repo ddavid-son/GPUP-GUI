@@ -12,6 +12,11 @@ public class GraphManager implements Serializable {
     private List<Target> targetArray = new ArrayList<>();
     private Map<String, Integer> targetsMap = new HashMap<>();
 
+    public enum RelationType {
+        DEPENDS_ON,
+        REQUIRED_FOR
+    }
+
     // ---------------------------------------- ctor and Graph initialization ----------------------------------------//
     public GraphManager(int numVertices, List<GPUPTarget> targetList) {
         this.size = numVertices;
@@ -174,6 +179,31 @@ public class GraphManager implements Serializable {
 
 
     // ---------------------------------------------- getters and utils ----------------------------------------------//
+    public List<String> getAllRelatedOn(String targetName, RelationType relationType) {
+        List<String> allRelated = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        allRelated.add(targetName);
+        visited.add(targetName);
+        allRelated.addAll(getAllRelatedOnDFSWorker(targetName, visited, relationType));
+        return allRelated;
+    }
+
+    public List<String> getAllRelatedOnDFSWorker(String targetName, Set<String> visited, RelationType relationType) {
+        List<String> allAncestor = new ArrayList<>();
+        List<String> targetNeighbours = relationType.equals(RelationType.REQUIRED_FOR) ?
+                getRequiredForOfByName(targetName) : getDependsOnOfByName(targetName);
+
+        for (String targetNeighbour : targetNeighbours) {
+            if (!visited.contains(targetNeighbour)) {
+                allAncestor.add(targetNeighbour);
+                visited.add(targetNeighbour);
+                allAncestor.addAll(getAllRelatedOnDFSWorker(targetNeighbour, visited, relationType));
+            }
+        }
+
+        return allAncestor;
+    }
+
     public List<Target> getTargetArray() {
         if (targetArray == null)
             targetArray = new ArrayList<>();
