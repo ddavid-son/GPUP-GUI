@@ -19,28 +19,22 @@ public class GpupApp extends Application {
     public void start(Stage primaryStage) throws Exception {
         primaryStage.setTitle("Gpup");
 
-        //load main window
         FXMLLoader fxmlLoader = new FXMLLoader();
         URL url = getClass().getResource(ROOT_MAIN_FXML);
         fxmlLoader.setLocation(url);
         BorderPane rootMain = fxmlLoader.load(url.openStream());
         //HeaderController headerController = fxmlLoader.getController();
 
-        //load graph table view
         fxmlLoader = new FXMLLoader();
         url = getClass().getResource(TABLE_VIEW_FXML);
         fxmlLoader.setLocation(url);
         ScrollPane tableViewComponent = fxmlLoader.load(url.openStream());
-        //HeaderController headerController = fxmlLoader.getController();
 
-        //load menu
         fxmlLoader = new FXMLLoader();
         url = getClass().getResource(MENU_FXML);
         fxmlLoader.setLocation(url);
         ScrollPane menuComponent = fxmlLoader.load(url.openStream());
-        //HeaderController headerController = fxmlLoader.getController();
 
-        //set components
         rootMain.setLeft(menuComponent);
         rootMain.setCenter(tableViewComponent);
 
