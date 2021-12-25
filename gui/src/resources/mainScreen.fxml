@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane minHeight="100.0" minWidth="10.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.mainScreen.AppController">
+    <left>
+        <fx:include fx:id="sideMenuComponent" source="sideMenu.fxml" />
+    </left>
+    <center>
+        <fx:include fx:id="graphTableViewComponent" source="graphTableView.fxml" />
+    </center>
+</BorderPane>
