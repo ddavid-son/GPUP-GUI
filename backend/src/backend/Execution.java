@@ -119,9 +119,23 @@ public class Execution implements Engine, Serializable {
                 graphManager.getTypeOf(targetName),
                 graphManager.getTargetUserData(targetName),
                 graphManager.getAllRelatedOn(targetName, GraphManager.RelationType.DEPENDS_ON),
-                graphManager.getAllRelatedOn(targetName, GraphManager.RelationType.REQUIRED_FOR)
+                graphManager.getAllRelatedOn(targetName, GraphManager.RelationType.REQUIRED_FOR),
+                graphManager.getDependsOnOfByName(targetName),
+                graphManager.getRequiredForOfByName(targetName)
         );
     }
+
+    @Override
+    public List<InfoAboutTargetDTO> getInfoAboutAllTargets() {
+        List<InfoAboutTargetDTO> infoAboutTargets = new ArrayList<>();
+
+        graphManager.getTargetArray().forEach(target -> {
+            infoAboutTargets.add(getInfoAboutTarget(target.getName()));
+        });
+
+        return infoAboutTargets;
+    }
+
 
     //----------------------------------------------- info about info ------------------------------------------------//
 
@@ -263,6 +277,7 @@ public class Execution implements Engine, Serializable {
     }
 
     private void checkAllSerialSetsAreValid(GPUPDescriptor instance, Map<String, TempTarget> string2TempTargetMap) {
+        if (instance.getGPUPSerialSets() == null) return;
         List<GPUPDescriptor.GPUPSerialSets.GPUPSerialSet> serialSetList = instance.getGPUPSerialSets().getGPUPSerialSet();
         serialSetList.forEach(s -> {
             Arrays.stream(s.getTargets()

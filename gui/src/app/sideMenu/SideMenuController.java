@@ -4,9 +4,13 @@ import app.mainScreen.AppController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.stage.FileChooser;
+
+import java.io.File;
 
 public class SideMenuController {
 
+    private AppController appController;
 
     @FXML
     private Button loadXMLBtn;
@@ -15,7 +19,7 @@ public class SideMenuController {
     private Button findPathBtn;
 
     @FXML
-    private Button FindCircleBtn;
+    private Button findCircleBtn;
 
     @FXML
     private Button displayRelatedBtn;
@@ -23,10 +27,17 @@ public class SideMenuController {
     @FXML
     private Button runTaskBtn;
 
-    private AppController appController;
-
-    public void setAppController(AppController appController) {
-        this.appController = appController;
+    @FXML
+    void OnLoadBtnClick(ActionEvent event) {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Load XML File");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("XML Files", "*.XML")
+        );
+        File selectedFile = fileChooser.showOpenDialog(null);
+        if (selectedFile != null) {
+            appController.loadXML(selectedFile);
+        }
     }
 
     @FXML
@@ -45,12 +56,25 @@ public class SideMenuController {
     }
 
     @FXML
-    void OnLoadBtnClick(ActionEvent event) {
+    void OnRunTaskBtnClick(ActionEvent event) {
 
     }
 
-    @FXML
-    void OnRunTaskBtnClick(ActionEvent event) {
+    public void setAllComponentsToDisabled() {
+        findPathBtn.setDisable(true);
+        findCircleBtn.setDisable(true);
+        displayRelatedBtn.setDisable(true);
+        runTaskBtn.setDisable(true);
+    }
 
+    public void setAllComponentsToEnabled() {
+        findPathBtn.setDisable(false);
+        findCircleBtn.setDisable(false);
+        displayRelatedBtn.setDisable(false);
+        runTaskBtn.setDisable(false);
+    }
+
+    public void setAppController(AppController appController) {
+        this.appController = appController;
     }
 }

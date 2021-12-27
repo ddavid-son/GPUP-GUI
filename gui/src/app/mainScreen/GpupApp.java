@@ -23,6 +23,7 @@ public class GpupApp extends Application {
         fxmlLoader.setLocation(url);
         Parent root = fxmlLoader.load(url.openStream());
 
+
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();

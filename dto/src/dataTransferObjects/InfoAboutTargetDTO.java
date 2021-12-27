@@ -5,31 +5,21 @@ import backend.Target;
 import java.util.List;
 
 public class InfoAboutTargetDTO {
-    private final String userData;
-    private final String targetName;
-    private final List<String> dependsOnNames;
-    private final Target.TargetType targetType;
-    private final List<String> requiredForNames;
+    public final String userData;
+    public final String targetName;
+    public final List<String> dependsOnNames;
+    public final int dependsOnCount;
+    public final Target.TargetType targetType;
 
-    public InfoAboutTargetDTO(String targetName, Target.TargetType targetType, String userData,
-                              List<String> dependsOnNames, List<String> requiredForNames) {
-        this.targetName = targetName;
-        this.targetType = targetType;
-        this.userData = userData;
-        this.dependsOnNames = dependsOnNames;
-        this.requiredForNames = requiredForNames;
-    }
+    public final List<String> requiredForNames;
+    public final int requiredForCount;
 
-    @Override
-    public String toString() {
-        return "Target name = " + targetName + '\n' +
-                " Target type = " + targetType + '\n' +
-                " User data = " + (userData.isEmpty() ? "no user data" : userData) + '\n' +
-                " Depends on = " + (dependsOnNames.isEmpty() ? "depends on no one  " : dependsOnNames) + '\n' +
-                " Required for = " + (requiredForNames.isEmpty() ? "required for no one " : requiredForNames);
-    }
+    public final List<String> directRequiredByName;
+    public final int directRequiredByCount;
 
-    //getters
+    public final List<String> directDependsOnByName;
+    public final int directDependsOnByCount;
+
     public String getUserData() {
         return userData;
     }
@@ -42,11 +32,65 @@ public class InfoAboutTargetDTO {
         return dependsOnNames;
     }
 
-    public List<String> getRequiredForNames() {
-        return requiredForNames;
+    public int getDependsOnCount() {
+        return dependsOnCount;
     }
 
     public Target.TargetType getTargetType() {
         return targetType;
     }
+
+    public List<String> getRequiredForNames() {
+        return requiredForNames;
+    }
+
+    public int getRequiredForCount() {
+        return requiredForCount;
+    }
+
+    public List<String> getDirectRequiredByName() {
+        return directRequiredByName;
+    }
+
+    public int getDirectRequiredByCount() {
+        return directRequiredByCount;
+    }
+
+    public List<String> getDirectDependsOnByName() {
+        return directDependsOnByName;
+    }
+
+    public int getDirectDependsOnByCount() {
+        return directDependsOnByCount;
+    }
+
+    public InfoAboutTargetDTO(String targetName, Target.TargetType targetType, String userData,
+                              List<String> allDependsOnNames, List<String> allRequiredForNames,
+                              List<String> directDependsOnNames, List<String> directRequiredForNames) {
+        this.targetName = targetName;
+        this.targetType = targetType;
+        this.userData = userData;
+
+        this.dependsOnNames = allDependsOnNames;
+        this.dependsOnCount = dependsOnNames.size();
+
+        this.requiredForNames = allRequiredForNames;
+        this.requiredForCount = requiredForNames.size();
+
+        this.directRequiredByName = directRequiredForNames;
+        this.directRequiredByCount = directRequiredByName.size();
+
+        this.directDependsOnByName = directDependsOnNames;
+        this.directDependsOnByCount = directDependsOnByName.size();
+    }
+
+    @Override
+    public String toString() {
+        return "Target name = " + targetName + '\n' +
+                " Target type = " + targetType + '\n' +
+                " User data = " + (userData.isEmpty() ? "no user data" : userData) + '\n' +
+                " Depends on = " + (dependsOnNames.isEmpty() ? "depends on no one  " : dependsOnNames) + '\n' +
+                " Required for = " + (requiredForNames.isEmpty() ? "required for no one " : requiredForNames);
+    }
+
 }

@@ -185,7 +185,7 @@ public class GraphManager implements Serializable {
         allRelated.add(targetName);
         visited.add(targetName);
         allRelated.addAll(getAllRelatedOnDFSWorker(targetName, visited, relationType));
-        return allRelated;
+        return allRelated.subList(1, allRelated.size());
     }
 
     public List<String> getAllRelatedOnDFSWorker(String targetName, Set<String> visited, RelationType relationType) {

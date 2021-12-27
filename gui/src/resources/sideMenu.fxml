@@ -1,38 +1,42 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.VBox?>
-
-<ScrollPane fitToHeight="true" fitToWidth="true" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.sideMenu.SideMenuController">
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<ScrollPane fitToHeight="true" fitToWidth="true" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/8.0.171"
+            xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.sideMenu.SideMenuController">
     <content>
         <VBox spacing="10.0">
             <children>
-                <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#OnLoadBtnClick" text="Load XML" VBox.vgrow="NEVER">
+                <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#OnLoadBtnClick" text="Load XML"
+                        VBox.vgrow="NEVER">
                     <VBox.margin>
-                        <Insets left="10.0" right="10.0" top="20.0" />
+                        <Insets left="10.0" right="10.0" top="20.0"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="findPathBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false" onAction="#OnFindPathBtnClick" text="Find path between nodes" textOverrun="CLIP" VBox.vgrow="NEVER">
+                <Button fx:id="findPathBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false"
+                        onAction="#OnFindPathBtnClick" text="Find path between nodes" textOverrun="CLIP"
+                        VBox.vgrow="NEVER">
                     <VBox.margin>
-                        <Insets left="10.0" right="10.0" top="10.0" />
+                        <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="FindCircleBtn" mnemonicParsing="false" onAction="#OnFindCircleBtnClick" text="Find if node is in circle" VBox.vgrow="NEVER">
+                <Button fx:id="findCircleBtn" mnemonicParsing="false" onAction="#OnFindCircleBtnClick"
+                        text="Find if node is in circle" VBox.vgrow="NEVER">
                     <VBox.margin>
-                        <Insets left="10.0" right="10.0" top="10.0" />
+                        <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="displayRelatedBtn" mnemonicParsing="false" onAction="#OnDisplayRelatedBtnClick" text="Display all related" VBox.vgrow="NEVER">
+                <Button fx:id="displayRelatedBtn" mnemonicParsing="false" onAction="#OnDisplayRelatedBtnClick"
+                        text="Display all related" VBox.vgrow="NEVER">
                     <VBox.margin>
-                        <Insets left="10.0" right="10.0" top="10.0" />
+                        <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="runTaskBtn" mnemonicParsing="false" onAction="#OnRunTaskBtnClick" text="Run task" VBox.vgrow="NEVER">
+                <Button fx:id="runTaskBtn" mnemonicParsing="false" onAction="#OnRunTaskBtnClick" text="Run task"
+                        VBox.vgrow="NEVER">
                     <VBox.margin>
-                        <Insets left="10.0" right="10.0" top="10.0" />
+                        <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
             </children>
