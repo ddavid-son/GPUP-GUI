@@ -1,14 +1,22 @@
 package app.mainScreen;
 
+import app.circleDisplay.CircleDisplayController;
+import app.findAllPaths.FindAllPathsController;
 import app.graphTableView.GraphTableViewController;
 import app.sideMenu.SideMenuController;
 import backend.Engine;
 import backend.Execution;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ScrollPane;
+import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class AppController {
 
@@ -33,7 +41,7 @@ public class AppController {
     }
 
     protected void setAllComponentsToDisabled() {
-        sideMenuComponentController.setAllComponentsToDisabled();
+        sideMenuComponentController.setAllComponentsToDisabled(false);
         graphTableViewComponentController.setAllComponentsToDisabled();
     }
 
@@ -43,7 +51,7 @@ public class AppController {
             sideMenuComponentController.setAllComponentsToEnabled();
             graphTableViewComponentController.setAllComponentsToEnabled();
             graphTableViewComponentController.loadGraphToTableView(execution.getInfoAboutAllTargets());
-            System.out.println("XML file loaded");
+            graphTableViewComponentController.loadSummaryToTableView(execution.getGraphInfo());
         } catch (IllegalArgumentException e) {
             handleErrors(e, "The file you selected is not a valid XML file");
         }
@@ -55,5 +63,45 @@ public class AppController {
         alert.setHeaderText(message);
         alert.setContentText(e.getMessage());
         alert.showAndWait();
+    }
+
+    public void findAllPaths() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource("/resources/findAllPaths.fxml");
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            FindAllPathsController PathFindPopUpWindow = fxmlLoader.getController();
+            PathFindPopUpWindow.setAppController(this);
+
+            PathFindPopUpWindow.loadComboBoxes(execution.getAllTargetNames(), execution);
+
+            Stage stage = new Stage();
+            stage.setTitle("Find all paths");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void findAllCircles() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource("/resources/circleDisplay.fxml");
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            CircleDisplayController circleDisplay = fxmlLoader.getController();
+            circleDisplay.setAppController(this);
+
+            circleDisplay.displayCircles(execution.getAllTargetNames(), execution);
+
+            Stage stage = new Stage();
+            stage.setTitle("Find all circles");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

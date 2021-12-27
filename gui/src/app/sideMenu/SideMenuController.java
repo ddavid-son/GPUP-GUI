@@ -28,7 +28,7 @@ public class SideMenuController {
     private Button runTaskBtn;
 
     @FXML
-    void OnLoadBtnClick(ActionEvent event) {
+    private void OnLoadBtnClick(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
         fileChooser.setTitle("Load XML File");
         fileChooser.getExtensionFilters().add(
@@ -41,26 +41,30 @@ public class SideMenuController {
     }
 
     @FXML
-    void OnDisplayRelatedBtnClick(ActionEvent event) {
+    private void OnDisplayRelatedBtnClick(ActionEvent event) {
 
     }
 
     @FXML
-    void OnFindCircleBtnClick(ActionEvent event) {
-
+    private void OnFindCircleBtnClick(ActionEvent event) {
+        setAllComponentsToDisabled(true);
+        appController.findAllCircles();
+        setAllComponentsToEnabled();
     }
 
     @FXML
-    void OnFindPathBtnClick(ActionEvent event) {
+    private void OnFindPathBtnClick(ActionEvent event) {
 
+        appController.findAllPaths();
     }
 
     @FXML
-    void OnRunTaskBtnClick(ActionEvent event) {
+    private void OnRunTaskBtnClick(ActionEvent event) {
 
     }
 
-    public void setAllComponentsToDisabled() {
+    public void setAllComponentsToDisabled(boolean disableXmlLoadBtn) {
+        loadXMLBtn.setDisable(disableXmlLoadBtn);
         findPathBtn.setDisable(true);
         findCircleBtn.setDisable(true);
         displayRelatedBtn.setDisable(true);
@@ -68,6 +72,7 @@ public class SideMenuController {
     }
 
     public void setAllComponentsToEnabled() {
+        loadXMLBtn.setDisable(false);
         findPathBtn.setDisable(false);
         findCircleBtn.setDisable(false);
         displayRelatedBtn.setDisable(false);
@@ -75,6 +80,7 @@ public class SideMenuController {
     }
 
     public void setAppController(AppController appController) {
+
         this.appController = appController;
     }
 }

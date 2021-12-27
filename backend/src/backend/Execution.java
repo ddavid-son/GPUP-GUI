@@ -330,6 +330,11 @@ public class Execution implements Engine, Serializable {
 
         return "";
     }
+
+    @Override
+    public List<String> getAllTargetNames() {
+        return graphManager.getAllNamesOfTargets();
+    }
     //------------------------------------------------ ctor and utils ------------------------------------------------//
 
     private static class TempTarget {

@@ -1,6 +1,7 @@
 package app.graphTableView;
 
 import app.mainScreen.AppController;
+import dataTransferObjects.GraphTargetsTypeInfoDTO;
 import dataTransferObjects.InfoAboutTargetDTO;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -49,9 +50,26 @@ public class GraphTableViewController {
     private TableColumn<InfoAboutTargetDTO, String> dataCol;
 
     @FXML
-    private TableView<?> stateTable;
+    private TableView<GraphTargetsTypeInfoDTO> stateTable;
+
+    @FXML
+    private TableColumn<GraphTargetsTypeInfoDTO, Integer> independentCol;
+
+    @FXML
+    private TableColumn<GraphTargetsTypeInfoDTO, Integer> rootCol;
+
+    @FXML
+    private TableColumn<GraphTargetsTypeInfoDTO, Integer> leafCol;
+
+    @FXML
+    private TableColumn<GraphTargetsTypeInfoDTO, Integer> middleCol;
+
+    @FXML
+    private TableColumn<GraphTargetsTypeInfoDTO, Integer> totalCol;
 
     private ObservableList<InfoAboutTargetDTO> dataForTable;
+
+    private ObservableList<GraphTargetsTypeInfoDTO> dataForStateTable;
 
 
     public void setAppController(AppController appController) {
@@ -91,5 +109,20 @@ public class GraphTableViewController {
         graphTable.setItems(dataForTable);
     }
 
+    public void loadSummaryToTableView(GraphTargetsTypeInfoDTO graphStateSummary) {
+        dataForStateTable = FXCollections.observableArrayList(graphStateSummary);
+        independentCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(graphStateSummary.getTotalNumberOfIndependents()).asObject());
+        rootCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(graphStateSummary.getTotalNumberOfRoots()).asObject());
+        leafCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(graphStateSummary.getTotalNumberOfLeaves()).asObject());
+        middleCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(graphStateSummary.getTotalNumberOfMiddles()).asObject());
+        totalCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(graphStateSummary.getTotalNumberOfTargets()).asObject());
+
+        stateTable.setItems(dataForStateTable);
+    }
 
 }

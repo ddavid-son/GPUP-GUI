@@ -45,6 +45,22 @@ public class GraphTargetsTypeInfoDTO {
         return totalNumberOfTargets;
     }
 
+    public int getTotalNumberOfRoots() {
+        return totalNumberOfRoots;
+    }
+
+    public int getTotalNumberOfLeaves() {
+        return totalNumberOfLeaves;
+    }
+
+    public int getTotalNumberOfMiddles() {
+        return totalNumberOfMiddles;
+    }
+
+    public int getTotalNumberOfIndependents() {
+        return totalNumberOfIndependents;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
@@ -57,5 +73,4 @@ public class GraphTargetsTypeInfoDTO {
                 .append("\n Total Number Of Independents: ").append(totalNumberOfIndependents);
         return sb.toString();
     }
-
 }

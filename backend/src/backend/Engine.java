@@ -31,4 +31,6 @@ public interface Engine extends Serializable {
                         boolean isIncremental, Consumer<String> print, boolean isSimulation);
 
     boolean isGraphAccessible();
+
+    List<String> getAllTargetNames();
 }

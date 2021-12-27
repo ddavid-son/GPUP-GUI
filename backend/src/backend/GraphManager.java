@@ -5,6 +5,7 @@ import backend.xmlhandler.GPUPTargetDependencies;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class GraphManager implements Serializable {
     private int size;
@@ -210,6 +211,10 @@ public class GraphManager implements Serializable {
         return targetArray;
     }
 
+    public List<String> getAllNamesOfTargets() {
+        return getTargetArray().stream().map(Target::getName).collect(Collectors.toList());
+    }
+
     public int getSize() {
         return this.size;
     }
@@ -231,7 +236,9 @@ public class GraphManager implements Serializable {
     }
 
     public boolean targetExists(String name) {
-        return targetsMap.containsKey(name.toUpperCase(Locale.ROOT));
+        if (name != null)
+            return targetsMap.containsKey(name.toUpperCase(Locale.ROOT));
+        return false;
     }
     // ---------------------------------------------- getters and utils ----------------------------------------------//
 
