@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ScrollPane;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -30,6 +31,8 @@ public class AppController {
     private GraphTableViewController graphTableViewComponentController;
 
     private final Engine execution = new Execution();
+    private final String FIND_ALL_PATHS_FXML_FILE = "/resources/findAllPaths.fxml";
+    private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/circleDisplay.fxml";
 
     @FXML
     public void initialize() {
@@ -68,7 +71,7 @@ public class AppController {
     public void findAllPaths() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("/resources/findAllPaths.fxml");
+            URL url = getClass().getResource(FIND_ALL_PATHS_FXML_FILE);
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load(url.openStream());
             FindAllPathsController PathFindPopUpWindow = fxmlLoader.getController();
@@ -77,6 +80,7 @@ public class AppController {
             PathFindPopUpWindow.loadComboBoxes(execution.getAllTargetNames(), execution);
 
             Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Find all paths");
             stage.setScene(new Scene(root));
             stage.show();
@@ -88,7 +92,7 @@ public class AppController {
     public void findAllCircles() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("/resources/circleDisplay.fxml");
+            URL url = getClass().getResource(CIRCLE_DISPLAY_FXML_FILE);
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load(url.openStream());
             CircleDisplayController circleDisplay = fxmlLoader.getController();
@@ -99,6 +103,8 @@ public class AppController {
             Stage stage = new Stage();
             stage.setTitle("Find all circles");
             stage.setScene(new Scene(root));
+            stage.getScene().getStylesheets().add(
+                    getClass().getResource("/app/circleDisplay/diplayCircle.css").toExternalForm());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();

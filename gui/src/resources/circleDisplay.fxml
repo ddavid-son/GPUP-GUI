@@ -3,46 +3,50 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
-<?import javafx.scene.layout.ColumnConstraints?>
-<?import javafx.scene.layout.GridPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.RowConstraints?>
-
-<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.circleDisplay.CircleDisplayController">
+<?import javafx.scene.layout.*?>
+<GridPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
+          prefWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1"
+          fx:controller="app.circleDisplay.CircleDisplayController">
     <columnConstraints>
-        <ColumnConstraints hgrow="NEVER" minWidth="20.0" prefWidth="20.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-        <ColumnConstraints hgrow="NEVER" minWidth="20.0" prefWidth="20.0" />
+        <ColumnConstraints hgrow="NEVER" minWidth="20.0" prefWidth="20.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0"/>
+        <ColumnConstraints hgrow="NEVER" minWidth="20.0" prefWidth="20.0"/>
     </columnConstraints>
     <rowConstraints>
-        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES"/>
+        <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="NEVER"/>
     </rowConstraints>
     <children>
-      <ScrollPane fitToHeight="true" fitToWidth="true" GridPane.columnIndex="1" GridPane.columnSpan="5" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.rowSpan="2" GridPane.valignment="CENTER">
-         <content>
-              <HBox fx:id="targetChooserBox" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="30.0" style="-fx-border-color: black;">
-                  <opaqueInsets>
-                      <Insets />
-                  </opaqueInsets>
-              </HBox>
-         </content>
-      </ScrollPane>
-      <ScrollPane fitToHeight="true" fitToWidth="true" GridPane.columnIndex="1" GridPane.columnSpan="5" GridPane.rowIndex="5" GridPane.rowSpan="2" GridPane.valignment="CENTER">
-         <content>
-              <HBox fx:id="circleDisplayBox" prefHeight="100.0" prefWidth="200.0" spacing="30.0" style="-fx-border-color: black;" />
-         </content>
-      </ScrollPane>
-        <Label text="Please choose a target" GridPane.columnIndex="2" GridPane.columnSpan="3" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+        <ScrollPane fitToHeight="true" fitToWidth="true" GridPane.columnIndex="1" GridPane.columnSpan="5"
+                    GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.rowSpan="2"
+                    GridPane.valignment="CENTER">
+            <content>
+                <HBox fx:id="targetChooserBox" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="20.0"
+                      style="-fx-border-color: black;">
+                    <opaqueInsets>
+                        <Insets/>
+                    </opaqueInsets>
+                </HBox>
+            </content>
+        </ScrollPane>
+        <ScrollPane fitToHeight="true" fitToWidth="true" GridPane.columnIndex="1" GridPane.columnSpan="5"
+                    GridPane.rowIndex="5" GridPane.rowSpan="2" GridPane.valignment="CENTER">
+            <content>
+                <HBox fx:id="circleDisplayBox" alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="30.0"
+                      style="-fx-border-color: black;"/>
+            </content>
+        </ScrollPane>
+        <Label text="Please choose a target" GridPane.columnIndex="2" GridPane.columnSpan="3"
+               GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER"/>
     </children>
 </GridPane>

@@ -295,8 +295,10 @@ public class Execution implements Engine, Serializable {
     private String checkForLoopsOfSize2(Map<String, TempTarget> string2TempTargetMap) {
         for (TempTarget tempTarget : string2TempTargetMap.values()) {
             for (String neighbourName : tempTarget.neighboursNames) {
-                if (string2TempTargetMap.get(neighbourName).neighboursNames.contains(tempTarget.name))
+                if (string2TempTargetMap.get(neighbourName).neighboursNames.contains(tempTarget.name)) {
+                    System.out.println("error: target: " + tempTarget.name + " has a loop of size 2");
                     return "error: there is a circle of size 2 between " + tempTarget.name + " and " + neighbourName;
+                }
             }
         }
 
