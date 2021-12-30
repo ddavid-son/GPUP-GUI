@@ -5,6 +5,7 @@ import backend.xmlhandler.GPUPTarget;
 import backend.xmlhandler.GPUPTargetDependencies;
 import dataTransferObjects.GraphTargetsTypeInfoDTO;
 import dataTransferObjects.InfoAboutTargetDTO;
+import dataTransferObjects.WhatIfDTO;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
@@ -134,6 +135,14 @@ public class Execution implements Engine, Serializable {
         });
 
         return infoAboutTargets;
+    }
+
+    @Override
+    public WhatIfDTO getWhatIf(String targetName, GraphManager.RelationType type) {
+        return new WhatIfDTO(type, targetName, graphManager.getAllRelatedOn(targetName, type),
+                type == GraphManager.RelationType.DEPENDS_ON ?
+                        graphManager.getDependsOnOfByName(targetName) :
+                        graphManager.getRequiredForOfByName(targetName));
     }
 
 

@@ -125,4 +125,7 @@ public class GraphTableViewController {
         stateTable.setItems(dataForStateTable);
     }
 
+    public TableView<InfoAboutTargetDTO> getTargetsGraph() {
+        return graphTable;
+    }
 }

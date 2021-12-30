@@ -6,34 +6,34 @@
 <ScrollPane fitToHeight="true" fitToWidth="true" BorderPane.alignment="CENTER" xmlns="http://javafx.com/javafx/8.0.171"
             xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.sideMenu.SideMenuController">
     <content>
-        <VBox spacing="10.0">
+        <VBox>
             <children>
-                <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#OnLoadBtnClick" text="Load XML"
+                <Button fx:id="loadXMLBtn" mnemonicParsing="false" onAction="#OnLoadBtnClick" text=""
                         VBox.vgrow="NEVER">
                     <VBox.margin>
-                        <Insets left="10.0" right="10.0" top="20.0"/>
+                        <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
                 <Button fx:id="findPathBtn" minHeight="-Infinity" minWidth="-Infinity" mnemonicParsing="false"
-                        onAction="#OnFindPathBtnClick" text="Find path between nodes" textOverrun="CLIP"
+                        onAction="#OnFindPathBtnClick" text="" textOverrun="CLIP"
                         VBox.vgrow="NEVER">
                     <VBox.margin>
                         <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
                 <Button fx:id="findCircleBtn" mnemonicParsing="false" onAction="#OnFindCircleBtnClick"
-                        text="Find if node is in circle" VBox.vgrow="NEVER">
+                        text="" VBox.vgrow="NEVER">
                     <VBox.margin>
                         <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
                 <Button fx:id="displayRelatedBtn" mnemonicParsing="false" onAction="#OnDisplayRelatedBtnClick"
-                        text="Display all related" VBox.vgrow="NEVER">
+                        text="" VBox.vgrow="NEVER">
                     <VBox.margin>
                         <Insets left="10.0" right="10.0" top="10.0"/>
                     </VBox.margin>
                 </Button>
-                <Button fx:id="runTaskBtn" mnemonicParsing="false" onAction="#OnRunTaskBtnClick" text="Run task"
+                <Button fx:id="runTaskBtn" mnemonicParsing="false" onAction="#OnRunTaskBtnClick" text=""
                         VBox.vgrow="NEVER">
                     <VBox.margin>
                         <Insets left="10.0" right="10.0" top="10.0"/>

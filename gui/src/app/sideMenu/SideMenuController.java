@@ -42,14 +42,13 @@ public class SideMenuController {
 
     @FXML
     private void OnDisplayRelatedBtnClick(ActionEvent event) {
-
+        appController.displayRelated();
     }
 
     @FXML
     private void OnFindCircleBtnClick(ActionEvent event) {
-        setAllComponentsToDisabled(true);
+
         appController.findAllCircles();
-        setAllComponentsToEnabled();
     }
 
     @FXML
@@ -80,7 +79,15 @@ public class SideMenuController {
     }
 
     public void setAppController(AppController appController) {
-
         this.appController = appController;
+        setButtonsIcon();
+    }
+
+    private void setButtonsIcon() {
+        loadXMLBtn.setGraphic(appController.getIcon("/icons/xmlIcon.png"));
+        findPathBtn.setGraphic(appController.getIcon("/icons/pathIcon.png"));
+        findCircleBtn.setGraphic(appController.getIcon("/icons/circleIcon.png"));
+        displayRelatedBtn.setGraphic(appController.getIcon("/icons/relatedIcon.png"));
+        runTaskBtn.setGraphic(appController.getIcon("/icons/launchIcon.png"));
     }
 }

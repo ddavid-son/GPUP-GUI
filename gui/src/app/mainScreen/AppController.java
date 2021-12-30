@@ -3,15 +3,19 @@ package app.mainScreen;
 import app.circleDisplay.CircleDisplayController;
 import app.findAllPaths.FindAllPathsController;
 import app.graphTableView.GraphTableViewController;
+import app.relatedView.RelatedViewController;
 import app.sideMenu.SideMenuController;
 import backend.Engine;
 import backend.Execution;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
@@ -101,13 +105,45 @@ public class AppController {
             circleDisplay.displayCircles(execution.getAllTargetNames(), execution);
 
             Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Find all circles");
             stage.setScene(new Scene(root));
             stage.getScene().getStylesheets().add(
-                    getClass().getResource("/app/circleDisplay/diplayCircle.css").toExternalForm());
+                    getClass().getResource("/app/circleDisplay/displayCircle.css").toExternalForm());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public Node getIcon(String s) {
+        Image image = new Image("/resources" + s);
+        ImageView imageView = new ImageView(image);
+        imageView.setFitHeight(50);
+        imageView.setFitWidth(50);
+        return imageView;
+    }
+
+    public void displayRelated() {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource("/resources/relatedView.fxml");
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            RelatedViewController relatedViewController = fxmlLoader.getController();
+            relatedViewController.setAppController(this, execution);
+
+            relatedViewController.loadTargetList();
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("display related");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
     }
 }
