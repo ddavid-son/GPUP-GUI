@@ -1,12 +1,20 @@
 package app.sideMenu;
 
 import app.mainScreen.AppController;
+import app.taskForm.TaskFormController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.stage.FileChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 public class SideMenuController {
 
@@ -26,6 +34,8 @@ public class SideMenuController {
 
     @FXML
     private Button runTaskBtn;
+
+    private final String TASK_FORM_FXML = "/resources/TaskForm.fxml";
 
     @FXML
     private void OnLoadBtnClick(ActionEvent event) {
@@ -59,6 +69,25 @@ public class SideMenuController {
 
     @FXML
     private void OnRunTaskBtnClick(ActionEvent event) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource(TASK_FORM_FXML);
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            TaskFormController taskFormController = fxmlLoader.getController();
+
+            taskFormController.setTaskController();
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Task Form");
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
     }
 

@@ -12,54 +12,61 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.text.Font?>
 
-<ScrollPane fitToHeight="true" fitToWidth="true" minHeight="400.0" minViewportHeight="300.0" minViewportWidth="300.0" minWidth="600.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.relatedView.RelatedViewController">
+<ScrollPane fitToHeight="true" fitToWidth="true" minHeight="400.0" minViewportHeight="300.0" minViewportWidth="600.0" minWidth="600.0" nodeOrientation="LEFT_TO_RIGHT" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.relatedView.RelatedViewController">
    <content>
-      <SplitPane dividerPositions="0.5" minHeight="300.0" minWidth="300.0" nodeOrientation="LEFT_TO_RIGHT" orientation="VERTICAL" prefHeight="200.0" prefWidth="160.0">
+      <SplitPane dividerPositions="0.5" minWidth="600.0" nodeOrientation="LEFT_TO_RIGHT" prefHeight="200.0" prefWidth="160.0">
          <items>
-            <GridPane>
+            <GridPane minHeight="300.0" minWidth="300.0">
               <columnConstraints>
                   <ColumnConstraints hgrow="NEVER" maxWidth="20.0" minWidth="20.0" prefWidth="20.0" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="20.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
-                <ColumnConstraints hgrow="NEVER" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="ALWAYS" minWidth="20.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="20.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                <ColumnConstraints hgrow="ALWAYS" minWidth="10.0" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="SOMETIMES" minWidth="20.0" prefWidth="100.0" />
                 <ColumnConstraints hgrow="NEVER" maxWidth="20.0" minWidth="20.0" prefWidth="20.0" />
               </columnConstraints>
               <rowConstraints>
-                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints maxHeight="20.0" minHeight="20.0" prefHeight="20.0" vgrow="NEVER" />
                 <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
                 <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="ALWAYS" />
                   <RowConstraints minHeight="20.0" prefHeight="20.0" vgrow="SOMETIMES" />
               </rowConstraints>
                <children>
-                  <ListView fx:id="targetListView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.rowSpan="2" GridPane.valignment="CENTER" />
-                  <Label alignment="TOP_CENTER" contentDisplay="TOP" nodeOrientation="LEFT_TO_RIGHT" text="select target to see all its related targets" textAlignment="CENTER" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                  <ListView fx:id="targetListView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="5" GridPane.rowSpan="2" GridPane.valignment="CENTER" />
+                  <Label alignment="TOP_CENTER" contentDisplay="TOP" nodeOrientation="LEFT_TO_RIGHT" text="select target to see all its related targets" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="TOP">
                      <font>
                         <Font size="18.0" />
                      </font>
                   </Label>
-                  <Button fx:id="relationIndicatorBtn" mnemonicParsing="false" onAction="#switchRelationTypeClicked" text="Depends On" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="2" GridPane.rowSpan="2" GridPane.valignment="CENTER" />
+                  <Button fx:id="relationIndicatorBtn" mnemonicParsing="false" onAction="#switchRelationTypeClicked" text="Depends On" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER" />
                </children>
             </GridPane>
-            <GridPane fx:id="relatedTableView">
+            <GridPane fx:id="relatedTableView" minHeight="300.0" minWidth="300.0" prefHeight="394.0" prefWidth="285.0">
               <columnConstraints>
                   <ColumnConstraints hgrow="NEVER" maxWidth="20.0" minWidth="20.0" prefWidth="20.0" />
                   <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
-                  <ColumnConstraints hgrow="NEVER" prefWidth="100.0" />
-                <ColumnConstraints hgrow="NEVER" prefWidth="100.0" />
+                  <ColumnConstraints hgrow="ALWAYS" prefWidth="100.0" />
+                <ColumnConstraints hgrow="ALWAYS" prefWidth="100.0" />
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                   <ColumnConstraints hgrow="NEVER" maxWidth="20.0" minWidth="20.0" prefWidth="20.0" />
               </columnConstraints>
               <rowConstraints>
                   <RowConstraints minHeight="20.0" prefHeight="20.0" vgrow="NEVER" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                  <RowConstraints minHeight="20.0" prefHeight="30.0" vgrow="NEVER" />
+                  <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
                 <RowConstraints maxHeight="30.0" minHeight="30.0" prefHeight="30.0" vgrow="NEVER" />
+                <RowConstraints minHeight="20.0" prefHeight="20.0" vgrow="NEVER" />
+                <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="ALWAYS" />
+                  <RowConstraints minHeight="30.0" prefHeight="30.0" vgrow="ALWAYS" />
+                  <RowConstraints maxHeight="20.0" minHeight="20.0" prefHeight="20.0" vgrow="NEVER" />
               </rowConstraints>
                <children>
-                  <ListView fx:id="whatIfList" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="1" GridPane.rowSpan="2" />
-                  <CheckBox fx:id="filterNonImmediateCB" mnemonicParsing="false" onAction="#filterBtn" text="include Immidate relatives only" GridPane.columnIndex="4" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.valignment="TOP">
+                  <ListView fx:id="whatIfList" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="2" GridPane.columnSpan="2" GridPane.rowIndex="5" GridPane.rowSpan="2" />
+                  <CheckBox fx:id="filterNonImmediateCB" mnemonicParsing="false" onAction="#filterBtn" text="include Immidate relatives only" GridPane.columnIndex="1" GridPane.columnSpan="4" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="CENTER">
                      <GridPane.margin>
                         <Insets left="20.0" />
                      </GridPane.margin>
