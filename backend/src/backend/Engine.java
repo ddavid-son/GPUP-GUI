@@ -35,5 +35,9 @@ public interface Engine extends Serializable {
 
     boolean isGraphAccessible();
 
+    boolean incrementalAvailable();
+
     List<String> getAllTargetNames();
+
+    int getMaxThreadCount();
 }

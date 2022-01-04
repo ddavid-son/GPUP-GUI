@@ -4,16 +4,19 @@ import app.mainScreen.AppController;
 import dataTransferObjects.GraphTargetsTypeInfoDTO;
 import dataTransferObjects.InfoAboutTargetDTO;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
 import java.util.List;
 
 public class GraphTableViewController {
+
     private AppController appController;
 
     @FXML
@@ -48,6 +51,10 @@ public class GraphTableViewController {
 
     @FXML
     private TableColumn<InfoAboutTargetDTO, String> dataCol;
+
+    @FXML
+    public TableColumn<InfoAboutTargetDTO, CheckBox> selectCol = new TableColumn<>("CheckBox");
+
 
     @FXML
     private TableView<GraphTargetsTypeInfoDTO> stateTable;
@@ -106,7 +113,30 @@ public class GraphTableViewController {
         dataCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getUserData()));
 
+        handleCheckBoxColAddition();
         graphTable.setItems(dataForTable);
+    }
+
+    private void handleCheckBoxColAddition() {
+        CheckBox CB = new CheckBox();
+        selectCol.setGraphic(CB);
+        selectCol.setMinWidth(50);
+        selectCol.setMaxWidth(50);
+        selectCol.setCellValueFactory(arg0 -> {
+            CheckBox checkBox = new CheckBox();
+
+            checkBox.selectedProperty().setValue(arg0.getValue().getIsSelected());
+            checkBox.selectedProperty().addListener((ov, old_val, new_val) ->
+                    arg0.getValue().setIsSelected(new_val));
+
+            CB.selectedProperty().addListener((ov, old_val, new_val) -> {
+                checkBox.selectedProperty().setValue(new_val);
+            });
+
+            return new SimpleObjectProperty<>(checkBox);
+        });
+
+        graphTable.getColumns().add(0, selectCol);
     }
 
     public void loadSummaryToTableView(GraphTargetsTypeInfoDTO graphStateSummary) {
@@ -127,5 +157,9 @@ public class GraphTableViewController {
 
     public TableView<InfoAboutTargetDTO> getTargetsGraph() {
         return graphTable;
+    }
+
+    public boolean hasTargetSelected() {
+        return dataForTable.stream().anyMatch(InfoAboutTargetDTO::getIsSelected);
     }
 }

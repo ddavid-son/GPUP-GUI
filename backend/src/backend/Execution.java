@@ -19,6 +19,7 @@ public class Execution implements Engine, Serializable {
     private Task task;
     private String workingDirectory;
     private GraphManager graphManager;
+    private int maxParallelism;
     private final static String JAXB_XML_GENERATED_CLASSES_PATH = "backend.xmlhandler";
 
     //----------------------------------------- read/write state from/to file ----------------------------------------//
@@ -207,6 +208,7 @@ public class Execution implements Engine, Serializable {
         }
 
         workingDirectory = gpupDescriptor.getGPUPConfiguration().getGPUPWorkingDirectory();
+        maxParallelism = gpupDescriptor.getGPUPConfiguration().getGPUPMaxParallelism();
         handleError(checkIfDataIsValid(gpupDescriptor));
 
         List<GPUPTarget> gpupTargets = gpupDescriptor.getGPUPTargets().getGPUPTarget();
@@ -340,6 +342,18 @@ public class Execution implements Engine, Serializable {
         }
 
         return "";
+    }
+
+    @Override
+    public boolean incrementalAvailable() {
+        if (task != null)
+            return task.getAllGraphHasBeenProcessed();
+        return false;
+    }
+
+    @Override
+    public int getMaxThreadCount() {
+        return this.maxParallelism;
     }
 
     @Override

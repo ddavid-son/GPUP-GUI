@@ -60,15 +60,23 @@ public class AppController {
             graphTableViewComponentController.loadGraphToTableView(execution.getInfoAboutAllTargets());
             graphTableViewComponentController.loadSummaryToTableView(execution.getGraphInfo());
         } catch (IllegalArgumentException e) {
-            handleErrors(e, "The file you selected is not a valid XML file");
+            handleErrors(
+                    e,
+                    "",
+                    "The file you selected is not a valid XML file"
+            );
         }
     }
 
-    private void handleErrors(Exception e, String message) {
+    private void handleErrors(Exception e, String bodyMessage, String headerMessage) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error occurred");
-        alert.setHeaderText(message);
-        alert.setContentText(e.getMessage());
+        alert.setHeaderText(headerMessage);
+        if (e != null) {
+            alert.setContentText(e.getMessage());
+        } else {
+            alert.setContentText(bodyMessage);
+        }
         alert.showAndWait();
     }
 
@@ -144,6 +152,35 @@ public class AppController {
             e.printStackTrace();
         }
 
+
+    }
+
+    public boolean taskHasTargetsSelected() {
+        if (!graphTableViewComponentController.hasTargetSelected()) {
+            handleErrors(
+                    null,
+                    "You must select at least one target before preforming this action",
+                    "Error running task"
+            );
+
+            return false;
+        }
+
+        return true;
+    }
+
+    public Engine getExecution() {
+        return execution;
+    }
+
+    public void runTask(int successRate, int warningRate, int sleepTime, int threadsCount,
+                        boolean isRandom, boolean isWhatIf, boolean isSimulation) {
+
+        // set screen for task in left part of the screen
+
+        //build graph to run on according to what if and selected targets in graph table
+
+        //send to run task - simulation or compilation
 
     }
 }

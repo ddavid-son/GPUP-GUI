@@ -1,6 +1,7 @@
 package dataTransferObjects;
 
 import backend.Target;
+import javafx.scene.control.CheckBox;
 
 import java.util.List;
 
@@ -10,6 +11,17 @@ public class InfoAboutTargetDTO {
     public final List<String> dependsOnNames;
     public final int dependsOnCount;
     public final Target.TargetType targetType;
+    public boolean isSelected = false;
+    public CheckBox CheckBox;
+
+    public CheckBox getCheckBox() {
+        return CheckBox;
+    }
+
+    public void setIsSelected(boolean isSelected) {
+        this.isSelected = isSelected;
+    }
+
 
     public final List<String> requiredForNames;
     public final int requiredForCount;
@@ -19,6 +31,10 @@ public class InfoAboutTargetDTO {
 
     public final List<String> directDependsOnByName;
     public final int directDependsOnByCount;
+
+    public boolean getIsSelected() {
+        return isSelected;
+    }
 
     public String getUserData() {
         return userData;

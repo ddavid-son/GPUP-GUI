@@ -2,6 +2,7 @@ package app.sideMenu;
 
 import app.mainScreen.AppController;
 import app.taskForm.TaskFormController;
+import backend.Engine;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -35,7 +36,12 @@ public class SideMenuController {
     @FXML
     private Button runTaskBtn;
 
+    @FXML
+    private Button settingBtn;
+
     private final String TASK_FORM_FXML = "/resources/TaskForm.fxml";
+
+    private Engine execution;
 
     @FXML
     private void OnLoadBtnClick(ActionEvent event) {
@@ -48,6 +54,7 @@ public class SideMenuController {
         if (selectedFile != null) {
             appController.loadXML(selectedFile);
         }
+        execution = appController.getExecution();
     }
 
     @FXML
@@ -69,6 +76,9 @@ public class SideMenuController {
 
     @FXML
     private void OnRunTaskBtnClick(ActionEvent event) {
+        if (!appController.taskHasTargetsSelected())
+            return;
+
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
             URL url = getClass().getResource(TASK_FORM_FXML);
@@ -76,7 +86,8 @@ public class SideMenuController {
             Parent root = fxmlLoader.load(url.openStream());
             TaskFormController taskFormController = fxmlLoader.getController();
 
-            taskFormController.setTaskController();
+            taskFormController.setAppController(appController);
+            taskFormController.setTaskController(execution.getMaxThreadCount(), execution.incrementalAvailable());
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -87,8 +98,6 @@ public class SideMenuController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public void setAllComponentsToDisabled(boolean disableXmlLoadBtn) {
@@ -118,5 +127,10 @@ public class SideMenuController {
         findCircleBtn.setGraphic(appController.getIcon("/icons/circleIcon.png"));
         displayRelatedBtn.setGraphic(appController.getIcon("/icons/relatedIcon.png"));
         runTaskBtn.setGraphic(appController.getIcon("/icons/launchIcon.png"));
+        settingBtn.setGraphic(appController.getIcon("/icons/settingIcon.png"));
+    }
+
+    @FXML
+    private void OnSettingBtnClicked(ActionEvent event) {
     }
 }
