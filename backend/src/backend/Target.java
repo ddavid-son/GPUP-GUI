@@ -108,6 +108,15 @@ public class Target implements Serializable {
         }
     }
 
+    //copy constructor
+    public Target(Target OGTarget) {
+        this.name = OGTarget.name;
+        this.userData = OGTarget.userData;
+        this.state = OGTarget.state;
+        this.type = OGTarget.type;
+        this.requiredFor = OGTarget.requiredFor;
+        this.dependsOnList = OGTarget.dependsOnList;
+    }
 
     //getters and setters
     public String getName() {
@@ -124,6 +133,14 @@ public class Target implements Serializable {
 
     public TargetType getType() {
         return type;
+    }
+
+    protected void setType(TargetType targetType) {
+        this.type = targetType;
+    }
+
+    protected void setState(TargetState targetState) {
+        this.state = targetState;
     }
 
     //enums

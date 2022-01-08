@@ -31,6 +31,10 @@ public class SimulationTask implements Task, Serializable {
         buildsSimulationGraph(graphManager);
     }
 
+    private static boolean missedTargets(SimulationTarget target) {
+        return target.state == Target.TargetState.FROZEN;
+    }
+
     @Override
     public boolean getAllGraphHasBeenProcessed() {
         return allGraphHasBeenProcessed;
@@ -52,27 +56,34 @@ public class SimulationTask implements Task, Serializable {
 
         // remove all succeeded targets from waiting list
         waitingList = waitingList.stream()
-                .filter(targetName -> graph.get(targetName).state == Target.TargetState.FAILURE ||
-                        graph.get(targetName).state == Target.TargetState.WAITING)
+                .filter(targetName -> graph.get(targetName).state == Target.TargetState.FAILURE)
                 .collect(Collectors.toCollection(LinkedList::new));
+
+        waitingList.forEach(targetName -> {
+            graph.get(targetName).requiredFor.forEach(reqName -> {
+                graph.get(reqName).dependsOn.add(targetName);
+            });
+            graph.get(targetName).state = Target.TargetState.WAITING;
+        });
 
         // RESETTING ALL SKIPPED TARGET TO THEIR ACTUAL STATE
         for (SimulationTarget target : graph.values()) {
             if (target.state == Target.TargetState.SKIPPED) {
                 target.nameOfFailedOrSkippedDependencies.forEach(skippDep -> {
                     if (!target.dependsOn.contains(skippDep))
-                        graph.get(skippDep).dependsOn.remove(target.name);
+                        graph.get(skippDep).dependsOn.add(target.name);
+                    //graph.get(skippDep).dependsOn.remove(target.name); // todo: figure why it says remove?
                 });
                 target.state = Target.TargetState.FROZEN;
                 target.nameOfFailedOrSkippedDependencies.clear();
-                if (target.dependsOn.isEmpty()) {
+/*                if (target.dependsOn.isEmpty()) {
                     target.state = Target.TargetState.WAITING;
                     waitingList.add(target.name);
-                }
+                }*/
             }
-            if (target.state == Target.TargetState.FAILURE) {
+/*            if (target.state == Target.TargetState.FAILURE) {
                 target.state = Target.TargetState.WAITING;
-            }
+            }*/
         }
 
         logData.clear();
@@ -87,8 +98,10 @@ public class SimulationTask implements Task, Serializable {
 
         for (int i = 0; i < waitingList.size(); i++) {
             SimulationTarget targetToExecute = graph.get(waitingList.get(i));
+            targetToExecute.state = Target.TargetState.IN_PROCESS;
             resOfTargetTaskRun = new accumulatorForWritingToFile();
-            if (targetToExecute.state == Target.TargetState.WAITING) { // redundant check maybe needs to be != FAILURE instead
+            if (targetToExecute.state == Target.TargetState.WAITING ||
+                    targetToExecute.state == Target.TargetState.IN_PROCESS) {
                 runTaskOnTarget(targetToExecute, random, isRandom, resOfTargetTaskRun, print);
                 writeTargetResultsToLogFile(resOfTargetTaskRun, fullPath);
                 logData.add(resOfTargetTaskRun);
@@ -125,7 +138,11 @@ public class SimulationTask implements Task, Serializable {
         for (SimulationTarget target : graph.values())
             if (target.state == Target.TargetState.SKIPPED) skipped++;
 
-        if (skipped == 0 && Failed == 0) allGraphHasBeenProcessed = true;
+        //todo: handle in case of cyclic dependency. maybe throw exception or dont open the incremental option
+        boolean hasCyclicDependency = graph.values().stream().anyMatch(SimulationTask::missedTargets);
+
+        if (skipped == 0 && Failed == 0)
+            allGraphHasBeenProcessed = true; // todo: need to consider if this is true in case of Circle in Graph
 
         print.accept("number of Skipped targets: " + skipped +
                 "\nnumber of Failed targets: " + Failed +
@@ -282,7 +299,8 @@ public class SimulationTask implements Task, Serializable {
         targetToExecute.requiredFor.forEach(neighbour -> {
             graph.get(neighbour).dependsOn.remove(targetToExecute.name);
             if (graph.get(neighbour).dependsOn.isEmpty()) {
-                if (!graph.get(neighbour).state.equals(Target.TargetState.SKIPPED)) {
+                if (!graph.get(neighbour).state.equals(Target.TargetState.SKIPPED) &&
+                        !waitingList.contains(neighbour)) {
                     waitingList.add(neighbour);
                     graph.get(neighbour).state = Target.TargetState.WAITING;
                 }
@@ -305,6 +323,26 @@ public class SimulationTask implements Task, Serializable {
                 }
             }
         }
+
+/*        for (String ancestor : targetToExecute.requiredFor) {
+            //if (!graph.get(ancestor).state.equals(Target.TargetState.SKIPPED)) {
+               // if (!resOfTargetTaskRun.SkippedTargets.contains(ancestor)) {
+               //     resOfTargetTaskRun.SkippedTargets.add(ancestor);
+               // }
+             //   graph.get(ancestor).state = Target.TargetState.SKIPPED;
+             //   graph.get(ancestor).nameOfFailedOrSkippedDependencies.add(targetToExecute.name);
+             //   notifyAllAncestorToBeSkipped(graph.get(ancestor), resOfTargetTaskRun);
+         //   }
+
+          /* if (!graph.get(ancestor).state.equals(Target.TargetState.SKIPPED)) {
+                if (!resOfTargetTaskRun.SkippedTargets.contains(ancestor))
+                    resOfTargetTaskRun.SkippedTargets.add(ancestor);
+                graph.get(ancestor).state = Target.TargetState.SKIPPED;
+                notifyAllAncestorToBeSkipped(graph.get(ancestor), resOfTargetTaskRun);
+            }
+            graph.get(ancestor).nameOfFailedOrSkippedDependencies.add(targetToExecute.name);
+
+        }*/
     }
 
     private class SimulationTarget implements Serializable {
@@ -313,8 +351,8 @@ public class SimulationTask implements Task, Serializable {
         private final String userData;
         private Target.TargetType type;
         private Target.TargetState state;
-        private final List<String> dependsOn;
-        private final List<String> requiredFor;
+        private List<String> dependsOn;
+        private List<String> requiredFor;
         private final List<String> nameOfFailedOrSkippedDependencies = new ArrayList<>();
 
         //ctor

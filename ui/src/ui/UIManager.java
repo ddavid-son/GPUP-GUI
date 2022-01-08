@@ -150,7 +150,11 @@ public class UIManager {
                 incrementalOrNewString = askAndReturnFromUser("please enter:\n for incremental run - inc \n for running new task from scratch - new\n", readln);
                 isIncremental = setIsIncremental(incrementalOrNewString);
 
-                engine.runTaskOnGraph(isRandom, msToRun, successRate, successfulWithWarningRate, isIncremental, print, isSimulation);
+//                TaskArgs taskArgs = new SimulationArgs((int) successRate * 100,
+//                        (int) successfulWithWarningRate * 100,
+//                        msToRun, 1, isRandom, false);
+
+                //engine.runTaskOnGraph(taskArgs);
                 isValidOrExit = true;
             } catch (Exception e) {
                 if (e.getMessage().equals("Exit!") || e.getMessage().equals("you need to load a valid XML file first"))

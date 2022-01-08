@@ -1,5 +1,7 @@
 package backend;
 
+import backend.argumentsDTO.SimulationArgs;
+import backend.argumentsDTO.TaskArgs;
 import backend.xmlhandler.GPUPDescriptor;
 import backend.xmlhandler.GPUPTarget;
 import backend.xmlhandler.GPUPTargetDependencies;
@@ -15,10 +17,12 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+
 public class Execution implements Engine, Serializable {
     private Task task;
     private String workingDirectory;
     private GraphManager graphManager;
+    GraphManager costumeGraphManager;
     private int maxParallelism;
     private final static String JAXB_XML_GENERATED_CLASSES_PATH = "backend.xmlhandler";
 
@@ -151,28 +155,55 @@ public class Execution implements Engine, Serializable {
 
 
     //--------------------------------------------------- run task --------------------------------------------------//
-    @Override
-    public void runTaskOnGraph(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
-                               boolean isIncremental, Consumer<String> print, boolean isSimulation) {
+    public void runSimulationTaskOnGraph(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
+                                         boolean isIncremental, Consumer<String> print) {
 
         checkIfGraphIsLoaded();
 
         if (task == null && isIncremental) {
             print.accept("no previous run detected, task will start from scratch. ");
             task = new SimulationTask(msToRun, isRandom, successRate,
-                    successfulWithWarningRate, graphManager, workingDirectory);
+                    successfulWithWarningRate, /*graphManager*/costumeGraphManager, workingDirectory);
         } else if (task != null && task.getAllGraphHasBeenProcessed() && isIncremental) {
             print.accept("all graph has been processed, task will start from scratch. ");
             task = new SimulationTask(msToRun, isRandom, successRate,
-                    successfulWithWarningRate, graphManager, workingDirectory);
+                    successfulWithWarningRate, /*graphManager*/costumeGraphManager, workingDirectory);
         } else if (!isIncremental) {
             task = new SimulationTask(msToRun, isRandom, successRate,
-                    successfulWithWarningRate, graphManager, workingDirectory);
+                    successfulWithWarningRate, /*graphManager*/costumeGraphManager, workingDirectory);
         } else {
             task.getReadyForIncrementalRun(isRandom, msToRun, successRate, successfulWithWarningRate);
         }
 
         task.run(print);
+    }
+
+    //build graphManager from list of targets
+    private void buildCostumeGraphManager(List<String> targets) {
+        costumeGraphManager = new GraphManager(targets, graphManager);
+    }
+
+    @Override
+    public void runTaskOnGraph(TaskArgs taskArgs) {
+
+        if (!taskArgs.isIncremental())
+            buildCostumeGraphManager(taskArgs.getTargetsSelectedForGraph());
+
+        switch (taskArgs.getTaskType()) {
+            case SIMULATION:
+                SimulationArgs simArgs = (SimulationArgs) taskArgs;
+                //maybe the consumer can be a thread ???
+                runSimulationTaskOnGraph(simArgs.isRandom(), simArgs.getSleepTime(), simArgs.getSuccessRate(),
+                        simArgs.getWarningRate(), simArgs.isIncremental(), System.out::println);
+                break;
+            case COMPILATION:
+                runCompilationTaskOnGraph();
+                break;
+        }
+    }
+
+    private void runCompilationTaskOnGraph() {
+
     }
     //--------------------------------------------------- run task ---------------------------------------------------//
 
@@ -194,6 +225,39 @@ public class Execution implements Engine, Serializable {
     //---------------------------------------------- info about graph ------------------------------------------------//
 
 
+    // ----------------------------------------------- Graph Viz bonus -----------------------------------------------//
+    @Override
+    public void makeGraphUsingGraphViz() {
+
+        GraphViz gv = new GraphViz();
+        gv.addln(gv.start_graph());
+        graphManager.getAllEdges().forEach(gv::addln);
+        gv.addln(gv.end_graph());
+        System.out.println(gv.getDotSource());
+
+        gv.increaseDpi();   // 106 dpi
+
+        String type = "png";
+        //      String type = "dot";
+        //      String type = "fig";    // open with xfig
+        //      String type = "pdf";
+        //      String type = "ps";
+        //      String type = "svg";    // open with inkscape
+        //      String type = "png";
+        //      String type = "plain";
+
+        String representationType = "dot";
+        //		String representationType= "neato";
+        //		String representationType= "fdp";
+        //		String representationType= "sfdp";
+        // 		String representationType= "twopi";
+        // 		String representationType= "circo";
+
+        File out = new File("C:\\dotGraph." + type);
+        gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type, representationType), out);
+    }
+    // ----------------------------------------------- Graph Viz bonus -----------------------------------------------//
+
     //---------------------------------------------- load graph from xml ---------------------------------------------//
     @Override
     public void xmlFileLoadingHandler(String xmlFilePath) {
@@ -213,6 +277,7 @@ public class Execution implements Engine, Serializable {
 
         List<GPUPTarget> gpupTargets = gpupDescriptor.getGPUPTargets().getGPUPTarget();
         graphManager = new GraphManager(gpupTargets.size(), gpupTargets);
+        this.task = null;
     }
 
     private void handleError(String errorMessage) {
@@ -347,17 +412,19 @@ public class Execution implements Engine, Serializable {
     @Override
     public boolean incrementalAvailable() {
         if (task != null)
-            return task.getAllGraphHasBeenProcessed();
+            return !task.getAllGraphHasBeenProcessed();
         return false;
     }
 
     @Override
     public int getMaxThreadCount() {
+
         return this.maxParallelism;
     }
 
     @Override
     public List<String> getAllTargetNames() {
+
         return graphManager.getAllNamesOfTargets();
     }
     //------------------------------------------------ ctor and utils ------------------------------------------------//

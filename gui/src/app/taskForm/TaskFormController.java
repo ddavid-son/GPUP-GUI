@@ -1,18 +1,27 @@
 package app.taskForm;
 
 import app.mainScreen.AppController;
+import app.sideMenu.SideMenuController;
+import backend.argumentsDTO.SimulationArgs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.VPos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Slider;
 import javafx.scene.layout.GridPane;
+import javafx.stage.Stage;
+
+import java.io.File;
 
 public class TaskFormController {
 
     @FXML
     private Slider successSlider;
+
+    @FXML
+    private Node taskStage;
 
     @FXML
     private Slider warningSlider;
@@ -55,8 +64,12 @@ public class TaskFormController {
 
     @FXML
     private RadioButton whatIfOnRB;
+
     private AppController appController;
 
+    private File currentFileInTask;
+
+    private SideMenuController sideMenuController;
 
     @FXML
     void whatIfOffRBClicked(ActionEvent event) {
@@ -72,27 +85,30 @@ public class TaskFormController {
 
     @FXML
     private void OnNewRunBtnClicked(ActionEvent event) {
-        runTask();
+        sideMenuController.setNewFileForTask();
+        runTask(false);
     }
 
     @FXML
     private void OnIncrementalRunBtnClicked(ActionEvent event) {
-        runTask();
+        runTask(true);
     }
 
-    private void runTask() {
-        appController.runTask(
-                successField.getValue(),
-                warningField.getValue(),
+    private void runTask(boolean isIncremental) {
+        ((Stage) newRunBtn.getScene().getWindow()).close();
+
+        appController.runTask(new SimulationArgs(
+                ((double) successField.getValue()) / 100,
+                ((double) warningField.getValue()) / 100,
                 sleepTimeField.getValue(),
                 threadCountField.getValue(),
                 yesRandomRB.isSelected(),
                 whatIfOnRB.isSelected(),
-                true
+                isIncremental)
         );
     }
 
-    public void setTaskController(int maxThreadCount, boolean incrementalAvailable) {
+    public void setTaskController(int maxThreadCount, boolean incrementalAvailable, boolean filesAreTheSame) {
 
         threadCountField = new IntField(1, maxThreadCount, 1);
         threadSlider.setMax(maxThreadCount);
@@ -116,7 +132,11 @@ public class TaskFormController {
         whatIfOffRB.setSelected(true);
         whatIfOnRB.setSelected(false);
 
-        incrementalRunBtn.setDisable(!incrementalAvailable);
+        incrementalRunBtn.setDisable(
+                !incrementalAvailable || !filesAreTheSame ||
+                        !appController.currentSelectedTargetsAreTheSameAsPreviousRun()
+
+        );
     }
 
     @FXML
@@ -131,7 +151,8 @@ public class TaskFormController {
         yesRandomRB.setSelected(true);
     }
 
-    public void setAppController(AppController appController) {
+    public void setAppController(AppController appController, SideMenuController sideMenuController) {
         this.appController = appController;
+        this.sideMenuController = sideMenuController;
     }
 }

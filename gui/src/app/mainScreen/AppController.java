@@ -7,6 +7,7 @@ import app.relatedView.RelatedViewController;
 import app.sideMenu.SideMenuController;
 import backend.Engine;
 import backend.Execution;
+import backend.argumentsDTO.TaskArgs;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -16,12 +17,14 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 public class AppController {
 
@@ -34,9 +37,14 @@ public class AppController {
     @FXML
     private GraphTableViewController graphTableViewComponentController;
 
+    public List<String> targetFromPreviousRun;
+
+
     private final Engine execution = new Execution();
     private final String FIND_ALL_PATHS_FXML_FILE = "/resources/findAllPaths.fxml";
     private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/circleDisplay.fxml";
+
+    private File activeFile;
 
     @FXML
     public void initialize() {
@@ -59,6 +67,7 @@ public class AppController {
             graphTableViewComponentController.setAllComponentsToEnabled();
             graphTableViewComponentController.loadGraphToTableView(execution.getInfoAboutAllTargets());
             graphTableViewComponentController.loadSummaryToTableView(execution.getGraphInfo());
+            activeFile = selectedFile;
         } catch (IllegalArgumentException e) {
             handleErrors(
                     e,
@@ -66,6 +75,10 @@ public class AppController {
                     "The file you selected is not a valid XML file"
             );
         }
+    }
+
+    public File getActiveFile() {
+        return activeFile;
     }
 
     private void handleErrors(Exception e, String bodyMessage, String headerMessage) {
@@ -116,8 +129,7 @@ public class AppController {
             stage.initModality(Modality.APPLICATION_MODAL);
             stage.setTitle("Find all circles");
             stage.setScene(new Scene(root));
-            stage.getScene().getStylesheets().add(
-                    getClass().getResource("/app/circleDisplay/displayCircle.css").toExternalForm());
+            stage.getScene().getStylesheets().add(getClass().getResource("/app/circleDisplay/displayCircle.css").toExternalForm());
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
@@ -170,17 +182,49 @@ public class AppController {
     }
 
     public Engine getExecution() {
+
         return execution;
     }
 
-    public void runTask(int successRate, int warningRate, int sleepTime, int threadsCount,
-                        boolean isRandom, boolean isWhatIf, boolean isSimulation) {
+    public void runTask(TaskArgs taskArgs) {
+        BorderPane mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
 
-        // set screen for task in left part of the screen
+        // gather targets name
+        List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
+        //System.out.println("targetNames: " + targetNames);
+        targetFromPreviousRun = targetNames; // here for the visibility of Incremental button
+        taskArgs.getTargetsSelectedForGraph().addAll(targetNames);
+        delegateExecutionOfTaskToAnotherThread(taskArgs);
 
-        //build graph to run on according to what if and selected targets in graph table
 
-        //send to run task - simulation or compilation
+        //TODO: make update methods to get the data from the task and update the graph LIVE
+
 
     }
+
+    private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
+        Thread thread = new Thread(() -> {
+            try {
+                execution.runTaskOnGraph(taskArgs);
+            } catch (Exception e) {
+                handleErrors(
+                        e,
+                        e.getMessage(),
+                        "Error running task");
+            }
+/*            Platform.runLater(() -> {
+                // TODO: maybe here we will handle the summary data
+            });*/
+        });
+        thread.setName("Task thread");
+        thread.start();
+    }
+
+    public boolean currentSelectedTargetsAreTheSameAsPreviousRun() {
+        List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
+        return targetNames.equals(targetFromPreviousRun);
+        //todo: this is not accurate when the order of the list is changed(maybe because of sorting option of the table)
+    }
+
+
 }

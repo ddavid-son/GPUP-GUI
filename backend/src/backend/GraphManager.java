@@ -105,6 +105,122 @@ public class GraphManager implements Serializable {
     // ---------------------------------------- ctor and Graph initialization ----------------------------------------//
 
 
+    // --------------------------------------------- copy Ctor and utils ---------------------------------------------//
+    public GraphManager(List<String> targetList, GraphManager originalGraph) {
+        this.size = targetList.size();
+        loadListAndMapWithNewGraph(targetList, originalGraph);
+        filterOutAllReferencesToNonExcitingTargets();   // filter out targets that are not in the targetList
+        //handleDependenciesReferencingOriginalTargets(); // replace all targets in dependencies with the new ones
+        setMatrixFromOriginalGraph(originalGraph);
+    }
+
+    private void loadListAndMapWithNewGraph(List<String> targetList, GraphManager originalGraph) {
+        for (String targetName : targetList) {
+            this.targetArray.add(new Target(originalGraph.getTargetByName(targetName)));
+            this.targetsMap.put(targetName, targetArray.size() - 1);
+        }
+    }
+
+    private void filterOutAllReferencesToNonExcitingTargets() {
+        List<Target> t;
+        for (int i = 0; i < targetArray.size(); i++) {
+            t = new ArrayList<>();
+            removeUnnecessaryTargetsFromList(t, i);
+            t = new ArrayList<>();
+            removeUnnecessaryTargetsFromDependsOnList(t, i);
+            updateTypeAndStateOfTarget(i);
+        }
+    }
+
+    private void updateTypeAndStateOfTarget(int i) {
+        if (targetArray.get(i).getDependsOnNames().size() == 0 &&
+                targetArray.get(i).getRequiredFor().size() == 0)
+            targetArray.get(i).setType(Target.TargetType.INDEPENDENT);
+
+        else if (targetArray.get(i).getDependsOnNames().size() != 0 &&
+                targetArray.get(i).getRequiredFor().size() != 0)
+            targetArray.get(i).setType(Target.TargetType.MIDDLE);
+
+        else if (targetArray.get(i).getDependsOnNames().size() == 0)
+            targetArray.get(i).setType(Target.TargetType.LEAF);
+
+        else
+            targetArray.get(i).setType(Target.TargetType.ROOT);
+
+        if (targetArray.get(i).getType().equals(Target.TargetType.INDEPENDENT) ||
+                targetArray.get(i).getType().equals(Target.TargetType.LEAF))
+            targetArray.get(i).setState(Target.TargetState.WAITING);
+        else
+            targetArray.get(i).setState(Target.TargetState.FROZEN);
+    }
+
+    private void removeUnnecessaryTargetsFromDependsOnList(List<Target> t, int i) {
+        targetArray.get(i).getDependsOnList().forEach(target -> {
+            if (targetsMap.containsKey(target.getName())) {
+                t.add(targetArray.get(targetsMap.get(target.getName())));
+            }
+        });
+        targetArray.get(i).setDependsOnList(t);
+    }
+
+    private void removeUnnecessaryTargetsFromList(List<Target> t, int i) {
+        targetArray.get(i).getRequiredFor().forEach(target -> {
+            if (targetsMap.containsKey(target.getName())) {
+                t.add(targetArray.get(targetsMap.get(target.getName())));
+            }
+        });
+        this.targetArray.get(i).setRequiredFor(t);
+    }
+
+    private void handleDependenciesReferencingOriginalTargets() {
+        List<Target> tempDependencyList;
+        for (Target target : targetArray) {
+            for (int i = 0; i < target.getDependsOnList().size(); i++) {
+                tempDependencyList = target.getDependsOnList().stream()
+                        .map(this::getTargetByName)
+                        .collect(Collectors.toList());
+                target.setDependsOnList(tempDependencyList);
+
+                tempDependencyList = target.getRequiredFor().stream()
+                        .map(this::getTargetByName)
+                        .collect(Collectors.toList());
+                target.setRequiredFor(tempDependencyList);
+            }
+        }
+    }
+
+    private void setMatrixFromOriginalGraph(GraphManager originalGraph) {
+        adjMatrix = new boolean[size][size];
+
+        for (boolean[] row : adjMatrix) {
+            Arrays.fill(row, false);
+        }
+
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (originalGraph.adjMatrix[i][j] &&
+                        targetsMap.containsKey(originalGraph.targetArray.get(i).getName())) {
+                    addEdgeToMatrix(i, j);
+                }
+            }
+        }
+    }
+
+    public List<String> getAllEdges() {
+        List<String> edges = new ArrayList<>();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (adjMatrix[i][j]) {
+                    edges.add(targetArray.get(i).getName() + " -> " + targetArray.get(j).getName());
+                }
+            }
+        }
+
+        return edges;
+    }
+    // --------------------------------------------- copy Ctor and utils ---------------------------------------------//
+
+
     // ----------------------------- for serialization - dont delete or comment out!!! -------------------------------//
     public void writeToFile() {
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("GraphManager.dat"))) {

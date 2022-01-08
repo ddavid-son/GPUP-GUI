@@ -14,6 +14,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GraphTableViewController {
 
@@ -95,7 +96,7 @@ public class GraphTableViewController {
 
     public void loadGraphToTableView(List<InfoAboutTargetDTO> allTargets) {
         dataForTable = FXCollections.observableArrayList(allTargets);
-
+        graphTable.getItems().clear();
         nameCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getTargetName()));
         typeCol.setCellValueFactory(cellData ->
@@ -113,6 +114,7 @@ public class GraphTableViewController {
         dataCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getUserData()));
 
+        graphTable.getColumns().remove(selectCol);
         handleCheckBoxColAddition();
         graphTable.setItems(dataForTable);
     }
@@ -161,5 +163,12 @@ public class GraphTableViewController {
 
     public boolean hasTargetSelected() {
         return dataForTable.stream().anyMatch(InfoAboutTargetDTO::getIsSelected);
+    }
+
+    public List<String> getSelectedTargetNames() {
+        return dataForTable.stream()
+                .filter(InfoAboutTargetDTO::getIsSelected)
+                .map(InfoAboutTargetDTO::getTargetName)
+                .collect(Collectors.toList());
     }
 }

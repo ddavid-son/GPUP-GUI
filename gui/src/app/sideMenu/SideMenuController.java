@@ -43,6 +43,8 @@ public class SideMenuController {
 
     private Engine execution;
 
+    private File currentFileInTask = new File("");
+
     @FXML
     private void OnLoadBtnClick(ActionEvent event) {
         FileChooser fileChooser = new FileChooser();
@@ -59,6 +61,7 @@ public class SideMenuController {
 
     @FXML
     private void OnDisplayRelatedBtnClick(ActionEvent event) {
+        //execution.makeGraphUsingGraphViz(); // TODO: uncomment this line - GrpahViz
         appController.displayRelated();
     }
 
@@ -80,14 +83,19 @@ public class SideMenuController {
             return;
 
         try {
+            //System.out.println("pop time: " + System.currentTimeMillis());
             FXMLLoader fxmlLoader = new FXMLLoader();
             URL url = getClass().getResource(TASK_FORM_FXML);
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load(url.openStream());
             TaskFormController taskFormController = fxmlLoader.getController();
 
-            taskFormController.setAppController(appController);
-            taskFormController.setTaskController(execution.getMaxThreadCount(), execution.incrementalAvailable());
+            taskFormController.setAppController(appController, this);
+            taskFormController.setTaskController(
+                    execution.getMaxThreadCount(),
+                    execution.incrementalAvailable(),
+                    currentFileInTask.equals(appController.getActiveFile())
+            );
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -132,5 +140,9 @@ public class SideMenuController {
 
     @FXML
     private void OnSettingBtnClicked(ActionEvent event) {
+    }
+
+    public void setNewFileForTask() {
+        currentFileInTask = appController.getActiveFile();
     }
 }
