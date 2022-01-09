@@ -8,6 +8,7 @@ import app.sideMenu.SideMenuController;
 import backend.Engine;
 import backend.Execution;
 import backend.argumentsDTO.TaskArgs;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -202,19 +203,19 @@ public class AppController {
 
     }
 
+    //feature
+
     private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
         Thread thread = new Thread(() -> {
             try {
                 execution.runTaskOnGraph(taskArgs);
             } catch (Exception e) {
-                handleErrors(
+                Platform.runLater(() -> handleErrors(
                         e,
                         e.getMessage(),
-                        "Error running task");
+                        "Error running task"));
             }
-/*            Platform.runLater(() -> {
-                // TODO: maybe here we will handle the summary data
-            });*/
+            // TODO: maybe down here will handle the summary data fetching with runLater to update the UI
         });
         thread.setName("Task thread");
         thread.start();

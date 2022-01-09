@@ -14,8 +14,6 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 
 public class Execution implements Engine, Serializable {
@@ -155,27 +153,38 @@ public class Execution implements Engine, Serializable {
 
 
     //--------------------------------------------------- run task --------------------------------------------------//
-    public void runSimulationTaskOnGraph(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
-                                         boolean isIncremental, Consumer<String> print) {
+    public void runSimulationTaskOnGraph(SimulationArgs simulationArgs/*boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
+                                         boolean isIncremental, Consumer<String> print*/) {
 
         checkIfGraphIsLoaded();
+        boolean createNewTask = true;
 
-        if (task == null && isIncremental) {
-            print.accept("no previous run detected, task will start from scratch. ");
-            task = new SimulationTask(msToRun, isRandom, successRate,
-                    successfulWithWarningRate, /*graphManager*/costumeGraphManager, workingDirectory);
-        } else if (task != null && task.getAllGraphHasBeenProcessed() && isIncremental) {
-            print.accept("all graph has been processed, task will start from scratch. ");
-            task = new SimulationTask(msToRun, isRandom, successRate,
-                    successfulWithWarningRate, /*graphManager*/costumeGraphManager, workingDirectory);
-        } else if (!isIncremental) {
-            task = new SimulationTask(msToRun, isRandom, successRate,
-                    successfulWithWarningRate, /*graphManager*/costumeGraphManager, workingDirectory);
+        /*boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
+                                         boolean isIncremental, Consumer<String> print*/
+        // simArgs.isRandom(), simArgs.getSleepTime(), simArgs.getSuccessRate(),
+        //       simArgs.getWarningRate(), simArgs.isIncremental(), System.out::println
+
+        if (task == null && simulationArgs.isIncremental()) {
+            System.out.println("no previous run detected, task will start from scratch. ");
+        } else if (task != null && task.getAllGraphHasBeenProcessed() && simulationArgs.isIncremental()) {
+            System.out.println("all graph has been processed, task will start from scratch. ");
+        } else if (!simulationArgs.isIncremental()) {
+            //do nothing
         } else {
-            task.getReadyForIncrementalRun(isRandom, msToRun, successRate, successfulWithWarningRate);
+            task.getReadyForIncrementalRun(simulationArgs.isRandom(), simulationArgs.getSleepTime(),
+                    simulationArgs.getSuccessRate(), simulationArgs.getWarningRate());
+            createNewTask = false;
         }
 
-        task.run(print);
+        if (createNewTask) {
+            task = new SimulationTask(simulationArgs.getSleepTime(), simulationArgs.isRandom(), simulationArgs.getSuccessRate(),
+                    simulationArgs.getWarningRate(), costumeGraphManager, workingDirectory, simulationArgs.getNumOfThreads(),
+                    /*graphManager*/costumeGraphManager.getSerialSetManager());
+            // todo check if this needs to be costumeGraphManager instead of graphManager
+        }
+
+        //todo: need to remove this sout after testing
+        task.run(System.out::println);
     }
 
     //build graphManager from list of targets
@@ -191,10 +200,8 @@ public class Execution implements Engine, Serializable {
 
         switch (taskArgs.getTaskType()) {
             case SIMULATION:
-                SimulationArgs simArgs = (SimulationArgs) taskArgs;
                 //maybe the consumer can be a thread ???
-                runSimulationTaskOnGraph(simArgs.isRandom(), simArgs.getSleepTime(), simArgs.getSuccessRate(),
-                        simArgs.getWarningRate(), simArgs.isIncremental(), System.out::println);
+                runSimulationTaskOnGraph((SimulationArgs) taskArgs);
                 break;
             case COMPILATION:
                 runCompilationTaskOnGraph();
@@ -276,7 +283,7 @@ public class Execution implements Engine, Serializable {
         handleError(checkIfDataIsValid(gpupDescriptor));
 
         List<GPUPTarget> gpupTargets = gpupDescriptor.getGPUPTargets().getGPUPTarget();
-        graphManager = new GraphManager(gpupTargets.size(), gpupTargets);
+        graphManager = new GraphManager(gpupTargets.size(), gpupTargets, gpupDescriptor.getGPUPSerialSets());
         this.task = null;
     }
 
@@ -358,7 +365,7 @@ public class Execution implements Engine, Serializable {
         serialSetList.forEach(s -> {
             Arrays.stream(s.getTargets()
                             .split(","))
-                    .collect(Collectors.toList())
+                    //.collect(Collectors.toList())
                     .forEach(t -> {
                         if (!string2TempTargetMap.containsKey(t))
                             throw new IllegalArgumentException(

@@ -1,5 +1,8 @@
 package backend;
 
+import backend.serialSets.SerialSet;
+import backend.serialSets.SerialSetManger;
+import backend.xmlhandler.GPUPDescriptor;
 import backend.xmlhandler.GPUPTarget;
 import backend.xmlhandler.GPUPTargetDependencies;
 
@@ -12,6 +15,7 @@ public class GraphManager implements Serializable {
     private boolean[][] adjMatrix;
     private List<Target> targetArray = new ArrayList<>();
     private Map<String, Integer> targetsMap = new HashMap<>();
+    private SerialSetManger serialSetManger = new SerialSetManger();
 
     public enum RelationType {
         DEPENDS_ON,
@@ -19,7 +23,7 @@ public class GraphManager implements Serializable {
     }
 
     // ---------------------------------------- ctor and Graph initialization ----------------------------------------//
-    public GraphManager(int numVertices, List<GPUPTarget> targetList) {
+    public GraphManager(int numVertices, List<GPUPTarget> targetList, GPUPDescriptor.GPUPSerialSets gpupSerialSets) {
         this.size = numVertices;
         adjMatrix = new boolean[numVertices][numVertices];
 
@@ -29,6 +33,25 @@ public class GraphManager implements Serializable {
 
         fillMapAndListWithTargets(targetList);
         setDependenciesOfTargets(targetList);
+        setSerialSets(gpupSerialSets);
+    }
+
+    private void setSerialSets(GPUPDescriptor.GPUPSerialSets gpupSerialSets) {
+        List<String> targetsInSerialSet = new ArrayList<>();
+        for (GPUPDescriptor.GPUPSerialSets.GPUPSerialSet ss : gpupSerialSets.getGPUPSerialSet()) {
+            Arrays.stream(ss.getTargets().split(","))
+                    .map(String::trim)
+                    .map(String::toUpperCase)
+                    .forEach(targetName -> {
+                        targetArray.get(targetsMap.get(targetName))
+                                .addSerialSetsName(ss.getName());
+                        targetsInSerialSet.add(targetName);
+                    });
+            serialSetManger.addSerialSet(ss.getName(), new SerialSet(ss.getName(), targetsInSerialSet));
+            targetsInSerialSet.clear();
+        }
+
+        serialSetManger.createMapFromTarget2SerialSetNames(targetArray);
     }
 
     private void fillMapAndListWithTargets(List<GPUPTarget> targetList) {
@@ -108,6 +131,7 @@ public class GraphManager implements Serializable {
     // --------------------------------------------- copy Ctor and utils ---------------------------------------------//
     public GraphManager(List<String> targetList, GraphManager originalGraph) {
         this.size = targetList.size();
+        this.serialSetManger = originalGraph.serialSetManger;
         loadListAndMapWithNewGraph(targetList, originalGraph);
         filterOutAllReferencesToNonExcitingTargets();   // filter out targets that are not in the targetList
         //handleDependenciesReferencingOriginalTargets(); // replace all targets in dependencies with the new ones
@@ -349,6 +373,10 @@ public class GraphManager implements Serializable {
 
     public String getTargetUserData(String targetName) {
         return getTargetByName(targetName).getUserData();
+    }
+
+    public SerialSetManger getSerialSetManager() {
+        return serialSetManger;
     }
 
     public boolean targetExists(String name) {

@@ -1,5 +1,7 @@
 package backend;
 
+import backend.serialSets.SerialSetManger;
+
 import java.io.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
@@ -9,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class SimulationTask implements Task, Serializable {
 
-    private String path;
+    private final String path;
     private int msToRun;
     private boolean isRandom;
     private double successRate;
@@ -17,17 +19,26 @@ public class SimulationTask implements Task, Serializable {
     private List<String> waitingList = new LinkedList<>();
     private Map<String, SimulationTarget> graph = new HashMap<>();
     private List<accumulatorForWritingToFile> logData = new LinkedList<>();
-    boolean allGraphHasBeenProcessed;
+    private boolean allGraphHasBeenProcessed;
+    private final int numberOfThreads;
+    private final SerialSetManger serialSetManger;
+    private int numberOfFinishedTargets = 0;
+
+    private synchronized void incrementFinishedThreadsCount() {
+        numberOfFinishedTargets++;
+    }
 
 
     public SimulationTask(int msToRun, boolean isRandom, double successRate, double successfulWithWarningRate,
-                          GraphManager graphManager, String pathToLogFile) {
+                          GraphManager graphManager, String pathToLogFile, int numberOfThreads, SerialSetManger serialSetManager) {
         this.allGraphHasBeenProcessed = false;
         this.path = pathToLogFile;
         this.msToRun = msToRun;
         this.isRandom = isRandom;
         this.successRate = successRate;
         this.successfulWithWarningRate = successfulWithWarningRate;
+        this.serialSetManger = serialSetManager;
+        this.numberOfThreads = numberOfThreads;
         buildsSimulationGraph(graphManager);
     }
 
@@ -60,9 +71,8 @@ public class SimulationTask implements Task, Serializable {
                 .collect(Collectors.toCollection(LinkedList::new));
 
         waitingList.forEach(targetName -> {
-            graph.get(targetName).requiredFor.forEach(reqName -> {
-                graph.get(reqName).dependsOn.add(targetName);
-            });
+            graph.get(targetName).requiredFor.forEach(reqName ->
+                    graph.get(reqName).dependsOn.add(targetName));
             graph.get(targetName).state = Target.TargetState.WAITING;
         });
 
@@ -96,16 +106,25 @@ public class SimulationTask implements Task, Serializable {
         String fullPath = createDirectoryToLogData(graphRunStartTime);
         accumulatorForWritingToFile resOfTargetTaskRun;
 
-        for (int i = 0; i < waitingList.size(); i++) {
-            SimulationTarget targetToExecute = graph.get(waitingList.get(i));
-            targetToExecute.state = Target.TargetState.IN_PROCESS;
-            resOfTargetTaskRun = new accumulatorForWritingToFile();
-            if (targetToExecute.state == Target.TargetState.WAITING ||
-                    targetToExecute.state == Target.TargetState.IN_PROCESS) {
-                runTaskOnTarget(targetToExecute, random, isRandom, resOfTargetTaskRun, print);
-                writeTargetResultsToLogFile(resOfTargetTaskRun, fullPath);
-                logData.add(resOfTargetTaskRun);
-                targetSummary(resOfTargetTaskRun, print);
+        while (numberOfFinishedTargets < waitingList.size()) {
+            for (int i = 0; i < waitingList.size(); i++) {
+                SimulationTarget targetToExecute = graph.get(waitingList.get(i));
+                // the order of the statements inside the if () is important - relaying of && short circuits
+                if (targetToExecute.state.equals(Target.TargetState.WAITING) && serialSetManger.canIRun(targetToExecute.name)) {
+                    targetToExecute.state = Target.TargetState.IN_PROCESS;
+                    resOfTargetTaskRun = new accumulatorForWritingToFile();
+                    accumulatorForWritingToFile finalResOfTargetTaskRun = resOfTargetTaskRun;
+                    Thread t = new Thread(() -> {
+                        runTaskOnTarget(targetToExecute, random, isRandom, finalResOfTargetTaskRun, print);
+                        writeTargetResultsToLogFile(finalResOfTargetTaskRun, fullPath);
+                        logData.add(finalResOfTargetTaskRun);
+                        targetSummary(finalResOfTargetTaskRun, print);
+                        serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
+                        incrementFinishedThreadsCount();
+                    });
+                    t.setName("thread number " + (numberOfFinishedTargets - 1));
+                    t.start();
+                }
             }
         }
         long graphRunEndTime = System.currentTimeMillis();
@@ -114,6 +133,7 @@ public class SimulationTask implements Task, Serializable {
                 "." + (graphRunEndTime - graphRunStartTime) % 1000 +
                 " s");
         simulationRunSummary(print);
+        numberOfFinishedTargets = 0;
     }
 
     private void targetSummary(accumulatorForWritingToFile resOfTargetTaskRun, Consumer<String> print) {
@@ -270,7 +290,7 @@ public class SimulationTask implements Task, Serializable {
 
     }
 
-    private void updateOpenTargets(SimulationTarget targetToExecute, accumulatorForWritingToFile resOfTargetTaskRun) {
+    private synchronized void updateOpenTargets(SimulationTarget targetToExecute, accumulatorForWritingToFile resOfTargetTaskRun) {
         for (String father : targetToExecute.requiredFor) {
             graph.get(father).dependsOn.remove(targetToExecute.name);
             if (graph.get(father).dependsOn.isEmpty())
@@ -293,8 +313,8 @@ public class SimulationTask implements Task, Serializable {
         }
     }
 
-    private void removeAndUpdateDependenciesAfterSuccess(SimulationTarget targetToExecute,
-                                                         accumulatorForWritingToFile resOfTargetTaskRun) {
+    private synchronized void removeAndUpdateDependenciesAfterSuccess(SimulationTarget targetToExecute,
+                                                                      accumulatorForWritingToFile resOfTargetTaskRun) {
 
         targetToExecute.requiredFor.forEach(neighbour -> {
             graph.get(neighbour).dependsOn.remove(targetToExecute.name);
@@ -309,8 +329,8 @@ public class SimulationTask implements Task, Serializable {
         });
     }
 
-    private void notifyAllAncestorToBeSkipped(SimulationTarget targetToExecute,
-                                              accumulatorForWritingToFile resOfTargetTaskRun) {
+    private synchronized void notifyAllAncestorToBeSkipped(SimulationTarget targetToExecute,
+                                                           accumulatorForWritingToFile resOfTargetTaskRun) {
 
         if (!targetToExecute.state.equals(Target.TargetState.SKIPPED)) {
             for (String ancestor : targetToExecute.requiredFor) {
@@ -323,7 +343,6 @@ public class SimulationTask implements Task, Serializable {
                 }
             }
         }
-
 /*        for (String ancestor : targetToExecute.requiredFor) {
             //if (!graph.get(ancestor).state.equals(Target.TargetState.SKIPPED)) {
                // if (!resOfTargetTaskRun.SkippedTargets.contains(ancestor)) {
@@ -345,7 +364,7 @@ public class SimulationTask implements Task, Serializable {
         }*/
     }
 
-    private class SimulationTarget implements Serializable {
+    public class SimulationTarget implements Serializable {
 
         private final String name;
         private final String userData;
@@ -354,6 +373,7 @@ public class SimulationTask implements Task, Serializable {
         private List<String> dependsOn;
         private List<String> requiredFor;
         private final List<String> nameOfFailedOrSkippedDependencies = new ArrayList<>();
+        private final List<String> serialSetsName = new ArrayList<>();
 
         //ctor
         public SimulationTarget(Target target) {
@@ -369,6 +389,7 @@ public class SimulationTask implements Task, Serializable {
 
             this.dependsOn = target.getDependsOnNames();
             this.requiredFor = target.getRequiredForNames();
+            this.serialSetsName.addAll(target.getSerialSetsName());
         }
     }
 }

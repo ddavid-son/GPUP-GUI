@@ -12,6 +12,7 @@ public class Target implements Serializable {
     private TargetType type = TargetType.INDEPENDENT;
     private List<Target> requiredFor = new LinkedList<>();
     private List<Target> dependsOnList = new LinkedList<>();
+    private final List<String> serialSetsName = new ArrayList<>();
 
     //ctor
     public Target(String name, String userData) {
@@ -119,6 +120,21 @@ public class Target implements Serializable {
     }
 
     //getters and setters
+
+    public final List<String> getSerialSetsName() {
+        return serialSetsName;
+    }
+
+    public void addSerialSetsName(String ssName) {
+        if (!serialSetsName.contains(ssName)) {
+            serialSetsName.add(ssName);
+        }
+    }
+
+    public final List<String> getSerialSetNames() {
+        return serialSetsName;
+    }
+
     public String getName() {
         return name;
     }
