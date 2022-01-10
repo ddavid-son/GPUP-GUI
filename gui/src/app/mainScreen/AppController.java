@@ -7,6 +7,7 @@ import app.relatedView.RelatedViewController;
 import app.sideMenu.SideMenuController;
 import backend.Engine;
 import backend.Execution;
+import backend.GraphManager;
 import backend.argumentsDTO.TaskArgs;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -25,7 +26,9 @@ import javafx.stage.Stage;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class AppController {
 
@@ -189,18 +192,24 @@ public class AppController {
 
     public void runTask(TaskArgs taskArgs) {
         BorderPane mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
-
-        // gather targets name
         List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
-        //System.out.println("targetNames: " + targetNames);
+        if (taskArgs.isWhatIf()) {
+            targetNames = getAllWhatIfResults(targetNames, taskArgs.getRelationType());
+        }
         targetFromPreviousRun = targetNames; // here for the visibility of Incremental button
         taskArgs.getTargetsSelectedForGraph().addAll(targetNames);
         delegateExecutionOfTaskToAnotherThread(taskArgs);
-
-
+        
         //TODO: make update methods to get the data from the task and update the graph LIVE
+    }
 
-
+    private List<String> getAllWhatIfResults(List<String> targetNames, GraphManager.RelationType relationType) {
+        List<String> whatIfResult = new ArrayList<>();
+        targetNames.forEach(targetName -> {
+            whatIfResult.addAll(execution.getWhatIf(targetName, relationType).getAllRelated());
+        });
+        targetNames.addAll(whatIfResult);
+        return targetNames.stream().distinct().collect(Collectors.toList());
     }
 
     //feature
@@ -219,6 +228,7 @@ public class AppController {
         });
         thread.setName("Task thread");
         thread.start();
+
     }
 
     public boolean currentSelectedTargetsAreTheSameAsPreviousRun() {

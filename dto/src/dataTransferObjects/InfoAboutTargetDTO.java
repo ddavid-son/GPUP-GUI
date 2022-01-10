@@ -12,6 +12,7 @@ public class InfoAboutTargetDTO {
     public final int dependsOnCount;
     public final Target.TargetType targetType;
     public boolean isSelected = false;
+    public List<String> serialSetsNames;
     public CheckBox CheckBox;
 
     public CheckBox getCheckBox() {
@@ -80,9 +81,18 @@ public class InfoAboutTargetDTO {
         return directDependsOnByCount;
     }
 
+    public List<String> getSerialSetsNames() {
+        return serialSetsNames;
+    }
+
+    public String getSerialSetsNamesAsString() {
+        return String.join(", ", serialSetsNames);
+    }
+
     public InfoAboutTargetDTO(String targetName, Target.TargetType targetType, String userData,
                               List<String> allDependsOnNames, List<String> allRequiredForNames,
-                              List<String> directDependsOnNames, List<String> directRequiredForNames) {
+                              List<String> directDependsOnNames, List<String> directRequiredForNames,
+                              List<String> ssNames) {
         this.targetName = targetName;
         this.targetType = targetType;
         this.userData = userData;
@@ -98,6 +108,8 @@ public class InfoAboutTargetDTO {
 
         this.directDependsOnByName = directDependsOnNames;
         this.directDependsOnByCount = directDependsOnByName.size();
+
+        this.serialSetsNames = ssNames;
     }
 
     @Override

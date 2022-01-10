@@ -109,8 +109,8 @@ public class GraphTableViewController {
                 new SimpleIntegerProperty(cellData.getValue().getDirectRequiredByCount()).asObject());
         RequiredForRelatedCol.setCellValueFactory(cellData ->
                 new SimpleIntegerProperty(cellData.getValue().getRequiredForCount()).asObject());
-        //serialSetCol.setCellValueFactory(cellData ->
-        //      new SimpleStringProperty(cellData.getValue().getSerialSet()));
+        serialSetCol.setCellValueFactory(cellData ->
+                new SimpleIntegerProperty(cellData.getValue().getSerialSetsNames().size()).asObject());
         dataCol.setCellValueFactory(cellData ->
                 new SimpleStringProperty(cellData.getValue().getUserData()));
 

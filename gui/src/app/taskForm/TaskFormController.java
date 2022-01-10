@@ -2,6 +2,7 @@ package app.taskForm;
 
 import app.mainScreen.AppController;
 import app.sideMenu.SideMenuController;
+import backend.GraphManager;
 import backend.argumentsDTO.SimulationArgs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -63,7 +64,10 @@ public class TaskFormController {
     private RadioButton whatIfOffRB;
 
     @FXML
-    private RadioButton whatIfOnRB;
+    private RadioButton whatIfDownOnRB;
+
+    @FXML
+    private RadioButton whatIfUpOnRB;
 
     private AppController appController;
 
@@ -71,17 +75,37 @@ public class TaskFormController {
 
     private SideMenuController sideMenuController;
 
+    // -------------------------------------------- what if methods -------------------------------------------------- /
     @FXML
     void whatIfOffRBClicked(ActionEvent event) {
         whatIfOffRB.setSelected(true);
-        whatIfOnRB.setSelected(false);
+        whatIfDownOnRB.setSelected(false);
+        whatIfUpOnRB.setSelected(false);
     }
 
     @FXML
     void whatIfOnRBClicked(ActionEvent event) {
-        whatIfOnRB.setSelected(true);
+        whatIfDownOnRB.setSelected(true);
+        whatIfOffRB.setSelected(false);
+        whatIfUpOnRB.setSelected(false);
+    }
+
+    @FXML
+    void whatIfUpOnRBClicked(ActionEvent event) {
+        whatIfUpOnRB.setSelected(true);
+        whatIfDownOnRB.setSelected(false);
         whatIfOffRB.setSelected(false);
     }
+
+    public boolean getWhatIfDownIsSelected() {
+        return whatIfDownOnRB.isSelected();
+    }
+
+    public boolean getWhatIfUpIsSelected() {
+        return whatIfUpOnRB.isSelected();
+    }
+
+    // -------------------------------------------- what if methods -------------------------------------------------- /
 
     @FXML
     private void OnNewRunBtnClicked(ActionEvent event) {
@@ -103,9 +127,12 @@ public class TaskFormController {
                 sleepTimeField.getValue(),
                 threadCountField.getValue(),
                 yesRandomRB.isSelected(),
-                whatIfOnRB.isSelected(),
-                isIncremental)
-        );
+                !whatIfOffRB.isSelected(),
+                isIncremental,
+                whatIfDownOnRB.isSelected() ?
+                        GraphManager.RelationType.DEPENDS_ON :
+                        GraphManager.RelationType.REQUIRED_FOR
+        ));
     }
 
     public void setTaskController(int maxThreadCount, boolean incrementalAvailable, boolean filesAreTheSame) {
@@ -130,7 +157,8 @@ public class TaskFormController {
         yesRandomRB.setSelected(true);
         noRandomRB.setSelected(false);
         whatIfOffRB.setSelected(true);
-        whatIfOnRB.setSelected(false);
+        whatIfUpOnRB.setSelected(false);
+        whatIfDownOnRB.setSelected(false);
 
         incrementalRunBtn.setDisable(
                 !incrementalAvailable || !filesAreTheSame ||

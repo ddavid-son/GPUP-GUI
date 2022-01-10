@@ -30,6 +30,9 @@ public class SerialSetManger {
     }
 
     public boolean canIRun(String targetName) {
+        if (target2SerialSetNames.get(targetName).isEmpty()) {
+            return true;
+        }
         if (target2SerialSetNames.get(targetName).stream().
                 allMatch(ssName -> ssName2serialSet.get(ssName).canIRun(targetName))) {
             blockAllMySerialSets(targetName);

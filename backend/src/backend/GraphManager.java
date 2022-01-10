@@ -351,6 +351,14 @@ public class GraphManager implements Serializable {
         return targetArray;
     }
 
+    public List<String> getTargetSerialSets(String targetName) {
+        if (targetExists(targetName)) {
+            return getTargetByName(targetName).getSerialSetsName();
+        }
+
+        return new ArrayList<>();
+    }
+
     public List<String> getAllNamesOfTargets() {
         return getTargetArray().stream().map(Target::getName).collect(Collectors.toList());
     }

@@ -6,6 +6,9 @@ import java.io.*;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -23,6 +26,8 @@ public class SimulationTask implements Task, Serializable {
     private final int numberOfThreads;
     private final SerialSetManger serialSetManger;
     private int numberOfFinishedTargets = 0;
+    private ThreadPoolExecutor threadPool;
+    private final LinkedBlockingQueue<Runnable> threadPoolTaskQueue = new LinkedBlockingQueue<>();
 
     private synchronized void incrementFinishedThreadsCount() {
         numberOfFinishedTargets++;
@@ -65,6 +70,8 @@ public class SimulationTask implements Task, Serializable {
         this.successRate = successRate;
         this.successfulWithWarningRate = successfulWithWarningRate;
 
+        //todo check if needed to update number of threads in case of incremental run
+
         // remove all succeeded targets from waiting list
         waitingList = waitingList.stream()
                 .filter(targetName -> graph.get(targetName).state == Target.TargetState.FAILURE)
@@ -86,14 +93,7 @@ public class SimulationTask implements Task, Serializable {
                 });
                 target.state = Target.TargetState.FROZEN;
                 target.nameOfFailedOrSkippedDependencies.clear();
-/*                if (target.dependsOn.isEmpty()) {
-                    target.state = Target.TargetState.WAITING;
-                    waitingList.add(target.name);
-                }*/
             }
-/*            if (target.state == Target.TargetState.FAILURE) {
-                target.state = Target.TargetState.WAITING;
-            }*/
         }
 
         logData.clear();
@@ -102,6 +102,8 @@ public class SimulationTask implements Task, Serializable {
     @Override
     public void run(Consumer<String> print) {
         Random random = new Random();
+        threadPool = new ThreadPoolExecutor(numberOfThreads, numberOfThreads, 30,
+                TimeUnit.SECONDS, threadPoolTaskQueue);
         long graphRunStartTime = System.currentTimeMillis();
         String fullPath = createDirectoryToLogData(graphRunStartTime);
         accumulatorForWritingToFile resOfTargetTaskRun;
@@ -109,24 +111,29 @@ public class SimulationTask implements Task, Serializable {
         while (numberOfFinishedTargets < waitingList.size()) {
             for (int i = 0; i < waitingList.size(); i++) {
                 SimulationTarget targetToExecute = graph.get(waitingList.get(i));
-                // the order of the statements inside the if () is important - relaying of && short circuits
+                // the order of the statements inside the if () is important - relaying on "&&" short-circuiting feature
+                // i.e. if the equals methode evaluates to false canIRun will not be called
                 if (targetToExecute.state.equals(Target.TargetState.WAITING) && serialSetManger.canIRun(targetToExecute.name)) {
                     targetToExecute.state = Target.TargetState.IN_PROCESS;
                     resOfTargetTaskRun = new accumulatorForWritingToFile();
                     accumulatorForWritingToFile finalResOfTargetTaskRun = resOfTargetTaskRun;
                     Thread t = new Thread(() -> {
+                        System.out.println("target " + targetToExecute.name + " is running");
+                        System.out.println("blocking queues: " + targetToExecute.serialSetsName);
                         runTaskOnTarget(targetToExecute, random, isRandom, finalResOfTargetTaskRun, print);
                         writeTargetResultsToLogFile(finalResOfTargetTaskRun, fullPath);
                         logData.add(finalResOfTargetTaskRun);
                         targetSummary(finalResOfTargetTaskRun, print);
                         serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
                         incrementFinishedThreadsCount();
-                    });
-                    t.setName("thread number " + (numberOfFinishedTargets - 1));
-                    t.start();
+                        System.out.println("Finished " + targetToExecute.name);
+                        System.out.println("opening serial sets: " + targetToExecute.serialSetsName);
+                    }, "thread #: " + numberOfFinishedTargets);
+                    threadPool.execute(t);
                 }
             }
         }
+
         long graphRunEndTime = System.currentTimeMillis();
         print.accept("Simulation finished in " +
                 (graphRunEndTime - graphRunStartTime) / 1000 +
@@ -134,6 +141,11 @@ public class SimulationTask implements Task, Serializable {
                 " s");
         simulationRunSummary(print);
         numberOfFinishedTargets = 0;
+    }
+
+    private void changePoolSize(int newNumberOfThreads) {
+        threadPool.setMaximumPoolSize(4);
+        threadPool.setCorePoolSize(4);
     }
 
     private void targetSummary(accumulatorForWritingToFile resOfTargetTaskRun, Consumer<String> print) {

@@ -1,5 +1,7 @@
 package backend.argumentsDTO;
 
+import backend.GraphManager;
+
 public class SimulationArgs extends TaskArgs {
     private final double successRate;
     private final double warningRate;
@@ -7,8 +9,8 @@ public class SimulationArgs extends TaskArgs {
     private final boolean isRandom;
 
     public SimulationArgs(double successRate, double warningRate, int sleepTime, int numOfThreads,
-                          boolean isRandom, boolean isWhatIf, boolean isIncremental) {
-        super(isWhatIf, numOfThreads, TaskType.SIMULATION, isIncremental);
+                          boolean isRandom, boolean isWhatIf, boolean isIncremental, GraphManager.RelationType relationType) {
+        super(isWhatIf, numOfThreads, TaskType.SIMULATION, isIncremental, relationType);
         this.successRate = successRate;
         this.warningRate = warningRate;
         this.sleepTime = sleepTime;

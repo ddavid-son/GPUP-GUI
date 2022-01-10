@@ -117,6 +117,7 @@ public class Target implements Serializable {
         this.type = OGTarget.type;
         this.requiredFor = OGTarget.requiredFor;
         this.dependsOnList = OGTarget.dependsOnList;
+        this.serialSetsName.addAll(OGTarget.serialSetsName);
     }
 
     //getters and setters
