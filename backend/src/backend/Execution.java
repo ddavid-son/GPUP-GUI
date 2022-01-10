@@ -211,7 +211,7 @@ public class Execution implements Engine, Serializable {
     }
 
     private void runCompilationTaskOnGraph() {
-
+        System.out.println("hi there");
     }
     //--------------------------------------------------- run task ---------------------------------------------------//
 

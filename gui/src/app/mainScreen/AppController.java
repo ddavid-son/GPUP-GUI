@@ -85,7 +85,7 @@ public class AppController {
         return activeFile;
     }
 
-    private void handleErrors(Exception e, String bodyMessage, String headerMessage) {
+    public void handleErrors(Exception e, String bodyMessage, String headerMessage) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle("Error occurred");
         alert.setHeaderText(headerMessage);
@@ -199,7 +199,7 @@ public class AppController {
         targetFromPreviousRun = targetNames; // here for the visibility of Incremental button
         taskArgs.getTargetsSelectedForGraph().addAll(targetNames);
         delegateExecutionOfTaskToAnotherThread(taskArgs);
-        
+
         //TODO: make update methods to get the data from the task and update the graph LIVE
     }
 
