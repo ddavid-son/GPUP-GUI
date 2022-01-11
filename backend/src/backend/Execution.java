@@ -1,6 +1,5 @@
 package backend;
 
-import backend.argumentsDTO.CompilationArgs;
 import backend.argumentsDTO.SimulationArgs;
 import backend.argumentsDTO.TaskArgs;
 import backend.xmlhandler.GPUPDescriptor;
@@ -157,8 +156,8 @@ public class Execution implements Engine, Serializable {
     //--------------------------------------------------- run task --------------------------------------------------//
     public void runSimulationTaskOnGraph(SimulationArgs simulationArgs) {
 
-        checkIfGraphIsLoaded();
-        boolean createNewTask = true;
+        //checkIfGraphIsLoaded();
+        /*boolean createNewTask = true;
 
         if (task == null && simulationArgs.isIncremental()) {
             System.out.println("no previous run detected, task will start from scratch. ");
@@ -172,14 +171,12 @@ public class Execution implements Engine, Serializable {
         }
 
         if (createNewTask) {
-            task = new SimulationTask(simulationArgs.getSleepTime(), simulationArgs.isRandom(), simulationArgs.getSuccessRate(),
-                    simulationArgs.getWarningRate(), costumeGraphManager, workingDirectory, simulationArgs.getNumOfThreads(),
-                    /*graphManager*/costumeGraphManager.getSerialSetManager());
-            // todo check if this needs to be costumeGraphManager instead of graphManager
+            task = new SimulationTask(simulationArgs, costumeGraphManager, workingDirectory, *//*simulationArgs.getNumOfThreads(),*//*
+                    costumeGraphManager.getSerialSetManager());
         }
 
         //todo: need to remove this sout after testing
-        task.run(System.out::println);
+        task.run(System.out::println);*/
     }
 
     //build graphManager from list of targets
@@ -190,21 +187,43 @@ public class Execution implements Engine, Serializable {
     @Override
     public void runTaskOnGraph(TaskArgs taskArgs) {
 
+        checkIfGraphIsLoaded();
+        boolean createNewTask = true;
+
         if (!taskArgs.isIncremental())
             buildCostumeGraphManager(taskArgs.getTargetsSelectedForGraph());
 
-        switch (taskArgs.getTaskType()) {
-            case SIMULATION:
-                //maybe the consumer can be a thread ???
-                runSimulationTaskOnGraph((SimulationArgs) taskArgs);
-                break;
-            case COMPILATION:
-                runCompilationTaskOnGraph((CompilationArgs) taskArgs);
-                break;
+
+        if (task == null && taskArgs.isIncremental()) {
+            System.out.println("no previous run detected, task will start from scratch. ");
+        } else if (task != null && task.getAllGraphHasBeenProcessed() && taskArgs.isIncremental()) {
+            System.out.println("all graph has been processed, task will start from scratch. ");
+        } else if (!taskArgs.isIncremental()) {
+            //do nothing
+        } else {
+            task.getReadyForIncrementalRun(taskArgs);
+            createNewTask = false;
         }
+
+        if (createNewTask) {
+            switch (taskArgs.getTaskType()) {
+                case SIMULATION:
+                    //maybe the consumer can be a thread ???
+                    task = new SimulationTask(taskArgs, costumeGraphManager, workingDirectory,
+                            costumeGraphManager.getSerialSetManager());
+                    break;
+                case COMPILATION:
+                    task = new CompilationTask(taskArgs, costumeGraphManager, workingDirectory,
+                            costumeGraphManager.getSerialSetManager());
+                    break;
+            }
+        }
+
+        //todo: need to remove this sout after testing
+        task.run(System.out::println);
     }
 
-    private void runCompilationTaskOnGraph(CompilationArgs compilationArgs) {
+ /*   private void runCompilationTaskOnGraph(CompilationArgs compilationArgs) {
         checkIfGraphIsLoaded();
         boolean createNewTask = true;
 
@@ -227,7 +246,7 @@ public class Execution implements Engine, Serializable {
         //todo: need to remove this sout after testing
         task.run(System.out::println);
 
-    }
+    }*/
     //--------------------------------------------------- run task ---------------------------------------------------//
 
 
