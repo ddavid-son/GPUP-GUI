@@ -1,5 +1,6 @@
 package backend;
 
+import backend.argumentsDTO.CompilationArgs;
 import backend.argumentsDTO.SimulationArgs;
 import backend.argumentsDTO.TaskArgs;
 import backend.xmlhandler.GPUPDescriptor;
@@ -154,16 +155,10 @@ public class Execution implements Engine, Serializable {
 
 
     //--------------------------------------------------- run task --------------------------------------------------//
-    public void runSimulationTaskOnGraph(SimulationArgs simulationArgs/*boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
-                                         boolean isIncremental, Consumer<String> print*/) {
+    public void runSimulationTaskOnGraph(SimulationArgs simulationArgs) {
 
         checkIfGraphIsLoaded();
         boolean createNewTask = true;
-
-        /*boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate,
-                                         boolean isIncremental, Consumer<String> print*/
-        // simArgs.isRandom(), simArgs.getSleepTime(), simArgs.getSuccessRate(),
-        //       simArgs.getWarningRate(), simArgs.isIncremental(), System.out::println
 
         if (task == null && simulationArgs.isIncremental()) {
             System.out.println("no previous run detected, task will start from scratch. ");
@@ -172,8 +167,7 @@ public class Execution implements Engine, Serializable {
         } else if (!simulationArgs.isIncremental()) {
             //do nothing
         } else {
-            task.getReadyForIncrementalRun(simulationArgs.isRandom(), simulationArgs.getSleepTime(),
-                    simulationArgs.getSuccessRate(), simulationArgs.getWarningRate());
+            task.getReadyForIncrementalRun(simulationArgs);
             createNewTask = false;
         }
 
@@ -205,13 +199,34 @@ public class Execution implements Engine, Serializable {
                 runSimulationTaskOnGraph((SimulationArgs) taskArgs);
                 break;
             case COMPILATION:
-                runCompilationTaskOnGraph();
+                runCompilationTaskOnGraph((CompilationArgs) taskArgs);
                 break;
         }
     }
 
-    private void runCompilationTaskOnGraph() {
-        System.out.println("hi there");
+    private void runCompilationTaskOnGraph(CompilationArgs compilationArgs) {
+        checkIfGraphIsLoaded();
+        boolean createNewTask = true;
+
+        if (task == null && compilationArgs.isIncremental()) {
+            System.out.println("no previous run detected, task will start from scratch. ");
+        } else if (task != null && task.getAllGraphHasBeenProcessed() && compilationArgs.isIncremental()) {
+            System.out.println("all graph has been processed, task will start from scratch. ");
+        } else if (!compilationArgs.isIncremental()) {
+            //do nothing
+        } else {
+            //task.getReadyForIncrementalRun();
+            createNewTask = false;
+        }
+
+        if (createNewTask) {
+            task = new CompilationTask();
+            // todo check if this needs to be costumeGraphManager instead of graphManager
+        }
+
+        //todo: need to remove this sout after testing
+        task.run(System.out::println);
+
     }
     //--------------------------------------------------- run task ---------------------------------------------------//
 

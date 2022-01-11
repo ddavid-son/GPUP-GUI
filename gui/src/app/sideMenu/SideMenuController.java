@@ -65,7 +65,7 @@ public class SideMenuController {
 
     @FXML
     private void OnDisplayRelatedBtnClick(ActionEvent event) {
-        //execution.makeGraphUsingGraphViz(); // TODO: uncomment this line - GrpahViz
+        //execution.makeGraphUsingGraphViz(); // TODO: uncomment this line - GraphViz
         appController.displayRelated();
     }
 

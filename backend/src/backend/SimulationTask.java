@@ -1,5 +1,7 @@
 package backend;
 
+import backend.argumentsDTO.SimulationArgs;
+import backend.argumentsDTO.TaskArgs;
 import backend.serialSets.SerialSetManger;
 
 import java.io.*;
@@ -19,6 +21,7 @@ public class SimulationTask implements Task, Serializable {
     private boolean isRandom;
     private double successRate;
     private double successfulWithWarningRate;
+
     private List<String> waitingList = new LinkedList<>();
     private Map<String, SimulationTarget> graph = new HashMap<>();
     private List<accumulatorForWritingToFile> logData = new LinkedList<>();
@@ -63,12 +66,13 @@ public class SimulationTask implements Task, Serializable {
     }
 
     @Override
-    public void getReadyForIncrementalRun(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate) {
+    public void getReadyForIncrementalRun(TaskArgs taskArgs/*boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate*/) {
+        SimulationArgs simulationArgs = (SimulationArgs) taskArgs;
 
-        this.msToRun = msToRun;
-        this.isRandom = isRandom;
-        this.successRate = successRate;
-        this.successfulWithWarningRate = successfulWithWarningRate;
+        this.msToRun = simulationArgs.getSleepTime();//msToRun;
+        this.isRandom = simulationArgs.isRandom();// isRandom;
+        this.successRate = simulationArgs.getSuccessRate();// successRate;
+        this.successfulWithWarningRate = simulationArgs.getWarningRate();// successfulWithWarningRate;
 
         //todo check if needed to update number of threads in case of incremental run
 

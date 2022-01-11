@@ -1,15 +1,19 @@
 package backend;
 
+import backend.argumentsDTO.TaskArgs;
+
 import java.util.function.Consumer;
 
 public class CompilationTask implements Task {
+
+
     @Override
     public void run(Consumer<String> print) {
 
     }
 
     @Override
-    public void getReadyForIncrementalRun(boolean isRandom, int msToRun, double successRate, double successfulWithWarningRate) {
+    public void getReadyForIncrementalRun(TaskArgs taskArgs) {
 
     }
 

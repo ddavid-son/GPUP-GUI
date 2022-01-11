@@ -183,7 +183,9 @@ public class TaskFormController {
                 isIncremental,
                 getWhatIfDownIsSelected() ?
                         GraphManager.RelationType.DEPENDS_ON :
-                        GraphManager.RelationType.REQUIRED_FOR
+                        GraphManager.RelationType.REQUIRED_FOR,
+                this.srcFolder.getName(),
+                this.dstFolder.getName()
         ));
     }
 
