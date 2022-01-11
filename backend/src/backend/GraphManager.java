@@ -230,17 +230,16 @@ public class GraphManager implements Serializable {
         }
     }
 
-    public List<String> getAllEdges() {
+    public String getAllEdges() {
         List<String> edges = new ArrayList<>();
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                if (adjMatrix[i][j]) {
-                    edges.add(targetArray.get(i).getName() + " -> " + targetArray.get(j).getName());
-                }
-            }
-        }
-
-        return edges;
+        StringBuilder sb = new StringBuilder();
+        targetArray.forEach(target -> {
+            sb.append(target.getName())
+                    .append(target.getDependsOnNames().isEmpty() ? "" : " -> ")
+                    .append(String.join(",", target.getDependsOnNames()))
+                    .append(";\n");
+        });
+        return sb.toString();
     }
     // --------------------------------------------- copy Ctor and utils ---------------------------------------------//
 

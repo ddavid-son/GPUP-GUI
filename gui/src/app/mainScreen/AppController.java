@@ -19,10 +19,13 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -140,11 +143,15 @@ public class AppController {
         }
     }
 
-    public Node getIcon(String s) {
-        Image image = new Image("/resources" + s);
+    public Node getIcon(String resourceName) {
+        return getIcon(resourceName, 50);
+    }
+
+    public Node getIcon(String resourceName, int size) {
+        Image image = new Image("/resources" + resourceName);
         ImageView imageView = new ImageView(image);
-        imageView.setFitHeight(50);
-        imageView.setFitWidth(50);
+        imageView.setFitHeight(size);
+        imageView.setFitWidth(size);
         return imageView;
     }
 
@@ -212,8 +219,6 @@ public class AppController {
         return targetNames.stream().distinct().collect(Collectors.toList());
     }
 
-    //feature
-
     private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
         Thread thread = new Thread(() -> {
             try {
@@ -237,5 +242,18 @@ public class AppController {
         //todo: this is not accurate when the order of the list is changed(maybe because of sorting option of the table)
     }
 
+    public void copyTextToClipboard(String text) {
+        Clipboard clipboard = Clipboard.getSystemClipboard();
+        ClipboardContent content = new ClipboardContent();
+        content.putString(text);
+        clipboard.setContent(content);
+    }
 
+    public void openFile(String imagePath) {
+        try {
+            Desktop.getDesktop().open(new File(imagePath));
+        } catch (IOException e) {
+            throw new RuntimeException(e.getMessage());
+        }
+    }
 }

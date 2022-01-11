@@ -20,7 +20,7 @@ public interface Engine extends Serializable {
 
     //void makeGraphUsingGraphViz();
 
-    void makeGraphUsingGraphViz();
+    void makeGraphUsingGraphViz(String outPutPath, String filesNames);
 
     void xmlFileLoadingHandler(String xmlFilePath);
 

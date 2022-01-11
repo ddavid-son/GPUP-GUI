@@ -73,7 +73,7 @@ public class GraphViz {
     /**
      * Define the index in the image size array.
      */
-    private int currentDpiPos = 7;
+    private int currentDpiPos = 15;
 
     /**
      * Increase the image size (dpi).
@@ -237,6 +237,7 @@ public class GraphViz {
         try {
             FileOutputStream fos = new FileOutputStream(to);
             fos.write(img);
+            fos.flush();
             fos.close();
         } catch (java.io.IOException ioe) {
             return -1;

@@ -235,34 +235,57 @@ public class Execution implements Engine, Serializable {
 
     // ----------------------------------------------- Graph Viz bonus -----------------------------------------------//
     @Override
-    public void makeGraphUsingGraphViz() {
+    public void makeGraphUsingGraphViz(String outPutPath, String filesNames) {
 
-        GraphViz gv = new GraphViz();
-        gv.addln(gv.start_graph());
-        graphManager.getAllEdges().forEach(gv::addln);
-        gv.addln(gv.end_graph());
-        System.out.println(gv.getDotSource());
+        try {
+            GraphViz gv = new GraphViz(getDotExeFromEnvironmentVariables(), outPutPath);
+            gv.addln(gv.start_graph());
+            gv.addln(graphManager.getAllEdges());
+            gv.addln(gv.end_graph());
+            gv.increaseDpi(); // 106 dpi
+            System.out.println(gv.getDotSource());
+            String type = "png";
+            //      String type = "dot";
+            //      String type = "fig";    // open with xfig
+            //      String type = "pdf";
+            //      String type = "ps";
+            //      String type = "svg";    // open with inkscape
+            //      String type = "png";
+            //      String type = "plain";
 
-        gv.increaseDpi();   // 106 dpi
+            String representationType = "dot";
+            //		String representationType= "neato";
+            //		String representationType= "fdp";
+            //		String representationType= "sfdp";
+            // 		String representationType= "twopi";
+            // 		String representationType= "circo";
 
-        String type = "png";
-        //      String type = "dot";
-        //      String type = "fig";    // open with xfig
-        //      String type = "pdf";
-        //      String type = "ps";
-        //      String type = "svg";    // open with inkscape
-        //      String type = "png";
-        //      String type = "plain";
+            File out = new File(outPutPath + File.separator + filesNames + "." + type);
+            gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type, representationType), out);
+            saveDotTextFile(outPutPath, filesNames, gv);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error - dot executable not found");
+        }
+    }
 
-        String representationType = "dot";
-        //		String representationType= "neato";
-        //		String representationType= "fdp";
-        //		String representationType= "sfdp";
-        // 		String representationType= "twopi";
-        // 		String representationType= "circo";
+    private void saveDotTextFile(String outPutPath, String filesNames, GraphViz gv) {
+        //write the dot file to txt file
+        try {
+            FileWriter fw = new FileWriter(outPutPath + File.separator + filesNames + ".viz");
+            fw.write(gv.getDotSource());
+            fw.flush();
+            fw.close();
+        } catch (IOException e) {
+            throw new IllegalArgumentException("Error - could not write the dot txt file");
+        }
+    }
 
-        File out = new File("C:\\dotGraph." + type);
-        gv.writeGraphToFile(gv.getGraph(gv.getDotSource(), type, representationType), out);
+    private String getDotExeFromEnvironmentVariables() {
+        return Arrays.stream(System.getenv("Path").split(";"))
+                .filter(path -> path.contains("Graphviz"))
+                .map(path -> path.concat("\\dot.exe"))
+                .findFirst()
+                .orElse("C:\\Program Files\\Graphviz\\bin\\dot.exe");
     }
     // ----------------------------------------------- Graph Viz bonus -----------------------------------------------//
 

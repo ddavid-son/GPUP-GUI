@@ -1,5 +1,6 @@
 package app.sideMenu;
 
+import app.graphVizForm.GraphVizFormController;
 import app.mainScreen.AppController;
 import app.taskForm.TaskFormController;
 import backend.Engine;
@@ -20,6 +21,8 @@ import java.net.URL;
 public class SideMenuController {
 
     private AppController appController;
+    @FXML
+    public Button graphVizBtn;
 
     @FXML
     private Button loadXMLBtn;
@@ -40,6 +43,7 @@ public class SideMenuController {
     private Button settingBtn;
 
     private final String TASK_FORM_FXML = "/resources/TaskForm.fxml";
+    private final String GRAPH_VIZ_FORM = "/resources/graphVizForm.fxml";
 
     private Engine execution;
 
@@ -114,6 +118,8 @@ public class SideMenuController {
         findCircleBtn.setDisable(true);
         displayRelatedBtn.setDisable(true);
         runTaskBtn.setDisable(true);
+        graphVizBtn.setDisable(true);
+        settingBtn.setDisable(true);
     }
 
     public void setAllComponentsToEnabled() {
@@ -122,6 +128,8 @@ public class SideMenuController {
         findCircleBtn.setDisable(false);
         displayRelatedBtn.setDisable(false);
         runTaskBtn.setDisable(false);
+        graphVizBtn.setDisable(false);
+        settingBtn.setDisable(false);
     }
 
     public void setAppController(AppController appController) {
@@ -130,12 +138,13 @@ public class SideMenuController {
     }
 
     private void setButtonsIcon() {
-        loadXMLBtn.setGraphic(appController.getIcon("/icons/xmlIcon.png"));
-        findPathBtn.setGraphic(appController.getIcon("/icons/pathIcon.png"));
+        loadXMLBtn.setGraphic(appController.getIcon("/icons/xmlIcon1.png"));
+        findPathBtn.setGraphic(appController.getIcon("/icons/pathIcon1.png"));
         findCircleBtn.setGraphic(appController.getIcon("/icons/circleIcon.png"));
-        displayRelatedBtn.setGraphic(appController.getIcon("/icons/relatedIcon.png"));
+        displayRelatedBtn.setGraphic(appController.getIcon("/icons/relatedIcon1.png"));
         runTaskBtn.setGraphic(appController.getIcon("/icons/launchIcon.png"));
         settingBtn.setGraphic(appController.getIcon("/icons/settingIcon.png"));
+        graphVizBtn.setGraphic(appController.getIcon("/icons/gvIcon.png"));
     }
 
     @FXML
@@ -143,6 +152,34 @@ public class SideMenuController {
     }
 
     public void setNewFileForTask() {
+
         currentFileInTask = appController.getActiveFile();
+    }
+
+    public void graphVizBtnClicked(ActionEvent actionEvent) {
+
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource(GRAPH_VIZ_FORM);
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            GraphVizFormController graphVizFormController = fxmlLoader.getController();
+
+            graphVizFormController.setAppController(appController, execution);
+            graphVizFormController.setGraphVizController(
+
+            );
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("GraphViz");
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        //execution.makeGraphUsingGraphViz();
     }
 }
