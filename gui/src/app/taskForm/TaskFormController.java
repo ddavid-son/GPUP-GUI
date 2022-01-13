@@ -5,6 +5,7 @@ import app.sideMenu.SideMenuController;
 import backend.GraphManager;
 import backend.argumentsDTO.CompilationArgs;
 import backend.argumentsDTO.SimulationArgs;
+import backend.argumentsDTO.TaskArgs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.VPos;
@@ -155,6 +156,7 @@ public class TaskFormController {
     }
 
     public void onIncrementalRunBtnCompClicked(ActionEvent actionEvent) {
+        appController.resetListOnTaskView(true);
         runCompilationTask(true);
     }
 
@@ -185,6 +187,9 @@ public class TaskFormController {
                 this.srcFolder.toString(),
                 this.dstFolder.toString()
         ));
+        if (sideMenuController.taskType == null || !isIncremental) {
+            sideMenuController.taskType = TaskArgs.TaskType.COMPILATION;
+        }
     }
 
     public void sourceFolderUploadBntClicked(ActionEvent actionEvent) {
@@ -236,6 +241,8 @@ public class TaskFormController {
     @FXML
     private void OnNewRunBtnClicked(ActionEvent event) {
         //todo: add check that all the inputs are valid
+        if (!incrementalRunBtn.isDisable())
+            appController.resetListOnTaskView(false);
         sideMenuController.setNewFileForTask();
         runSimulationTask(false);
     }
@@ -243,6 +250,7 @@ public class TaskFormController {
     @FXML
     private void OnIncrementalRunBtnClicked(ActionEvent event) {
         //todo: add check that all the inputs are valid
+        appController.resetListOnTaskView(true);
         runSimulationTask(true);
     }
 
@@ -268,7 +276,8 @@ public class TaskFormController {
             return;
         }
 
-        ((Stage) newRunBtn.getScene().getWindow()).close();
+        // todo decide if i want to keep the task form open for easier incremental run
+        //((Stage) newRunBtn.getScene().getWindow()).close();
         SimulationArgs simulationArgs = new SimulationArgs(
                 ((double) successField.getValue()) / 100,
                 ((double) warningField.getValue()) / 100,
@@ -282,6 +291,8 @@ public class TaskFormController {
                         GraphManager.RelationType.REQUIRED_FOR
         );
         appController.runTask(simulationArgs);
+        if (sideMenuController.taskType == null || !simulationArgs.isIncremental())
+            sideMenuController.taskType = TaskArgs.TaskType.SIMULATION;
         /*appController.goToTaskView(simulationArgs);*/
     }
 
@@ -309,14 +320,12 @@ public class TaskFormController {
         whatIfUpOnRBComp.setSelected(false);
         incrementalRunBtnComp.setDisable(
                 !incrementalAvailable || !filesAreTheSame ||
-                        !appController.currentSelectedTargetsAreTheSameAsPreviousRun()
+                        !appController.currentSelectedTargetsAreTheSameAsPreviousRun() ||
+                        TaskArgs.TaskType.SIMULATION == sideMenuController.taskType
 
         );
         sourceFolderUploadBnt.setGraphic(appController.getIcon("/icons/UploadIcon.png"));
         OutputFolderUploadBnt.setGraphic(appController.getIcon("/icons/UploadIcon.png"));
-/*        newRunBtnComp.disableProperty().bind(Bindings.and(
-                new SimpleBooleanProperty(srcFolder != null),
-                new SimpleBooleanProperty(dstFolder != null)));*/
     }
 
     private void simulationTabSetUp(int maxThreadCount, boolean incrementalAvailable, boolean filesAreTheSame) {
@@ -345,7 +354,8 @@ public class TaskFormController {
 
         incrementalRunBtn.setDisable(
                 !incrementalAvailable || !filesAreTheSame ||
-                        !appController.currentSelectedTargetsAreTheSameAsPreviousRun()
+                        !appController.currentSelectedTargetsAreTheSameAsPreviousRun() ||
+                        TaskArgs.TaskType.COMPILATION == sideMenuController.taskType
 
         );
     }

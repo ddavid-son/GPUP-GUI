@@ -113,28 +113,23 @@ public abstract class Task implements Serializable {
                 if (targetToExecute.state.equals(Target.TargetState.WAITING) && serialSetManger.canIRun(targetToExecute.name)) {
                     targetToExecute.state = Target.TargetState.IN_PROCESS;
                     Platform.runLater(() -> {
-                        finishedTarget.accept(new ProgressDto(targetToExecute.name, targetToExecute.state));
+                        finishedTarget.accept(new ProgressDto(targetToExecute.name, Target.TargetState.IN_PROCESS));
                     });
                     resOfTargetTaskRun = new accumulatorForWritingToFile();
                     accumulatorForWritingToFile finalResOfTargetTaskRun = resOfTargetTaskRun;
                     Thread t = new Thread(() -> {
                         updateNumberOfActiveThreads(true);
-                        System.out.println("target " + targetToExecute.name + " is running");
-                        System.out.println("blocking queues: " + targetToExecute.serialSetsName);
                         runTaskOnTarget(targetToExecute, finalResOfTargetTaskRun, print);
+                        Platform.runLater(() -> {
+                            finishedTargetLog.accept(finalResOfTargetTaskRun);
+                            finishedTarget.accept(new ProgressDto(getNamesToRunLater(targetToExecute, finalResOfTargetTaskRun), targetToExecute.state));
+                        });
                         writeTargetResultsToLogFile(finalResOfTargetTaskRun, fullPath);
                         logData.add(finalResOfTargetTaskRun);
                         targetSummary(finalResOfTargetTaskRun, print);
                         serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
                         incrementFinishedThreadsCount();
-                        System.out.println("Finished " + targetToExecute.name);
-                        System.out.println("opening serial sets: " + targetToExecute.serialSetsName);
                         updateNumberOfActiveThreads(false);
-                        System.out.println(targetToExecute.nameOfFailedOrSkippedDependencies);
-                        Platform.runLater(() -> {
-                            finishedTargetLog.accept(finalResOfTargetTaskRun);
-                            finishedTarget.accept(new ProgressDto(targetToExecute.name, targetToExecute.state));
-                        });
                     }, "thread #: " + numberOfFinishedTargets);
                     threadPool.execute(t);
                 }
@@ -148,6 +143,16 @@ public abstract class Task implements Serializable {
                 " s");
         simulationRunSummary(print);
         numberOfFinishedTargets = 0;
+    }
+
+    private String getNamesToRunLater(TaskTarget targetToExecute, accumulatorForWritingToFile finalResOfTargetTaskRun) {
+        /*            case SUCCESS:
+            case WARNING:
+                return targetToExecute.name + "," + String.join(",", finalResOfTargetTaskRun.targetOpened);*/
+        if (targetToExecute.state == Target.TargetState.FAILURE) {
+            return targetToExecute.name + "," + String.join(",", finalResOfTargetTaskRun.SkippedTargets);
+        }
+        return targetToExecute.name;
     }
 
     private void setConsumers(Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget) {
@@ -288,6 +293,9 @@ public abstract class Task implements Serializable {
             if (graph.get(neighbour).dependsOn.isEmpty()) {
                 if (!graph.get(neighbour).state.equals(Target.TargetState.SKIPPED) &&
                         !waitingList.contains(neighbour)) {
+                    Platform.runLater(() -> {
+                        finishedTarget.accept(new ProgressDto(neighbour, Target.TargetState.WAITING));
+                    });
                     waitingList.add(neighbour);
                     graph.get(neighbour).state = Target.TargetState.WAITING;
                 }
@@ -330,6 +338,9 @@ public abstract class Task implements Serializable {
             graph.get(targetName).requiredFor.forEach(reqName ->
                     graph.get(reqName).dependsOn.add(targetName));
             graph.get(targetName).state = Target.TargetState.WAITING;
+            Platform.runLater(() -> {
+                finishedTarget.accept(new ProgressDto(targetName, Target.TargetState.WAITING));
+            });
         });
 
         // RESETTING ALL SKIPPED TARGET TO THEIR ACTUAL STATE
@@ -343,8 +354,6 @@ public abstract class Task implements Serializable {
                 target.nameOfFailedOrSkippedDependencies.clear();
             }
         }
-
-        System.out.println("i will run maxinum " + numberOfThreads + " threads");
 
         logData.clear();
     }

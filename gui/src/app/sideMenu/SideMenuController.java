@@ -4,6 +4,7 @@ import app.graphVizForm.GraphVizFormController;
 import app.mainScreen.AppController;
 import app.taskForm.TaskFormController;
 import backend.Engine;
+import backend.argumentsDTO.TaskArgs;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -46,6 +47,7 @@ public class SideMenuController {
     private final String GRAPH_VIZ_FORM = "/resources/graphVizForm.fxml";
 
     private Engine execution;
+    public TaskArgs.TaskType taskType;
 
     private File currentFileInTask = new File("");
 
@@ -87,7 +89,6 @@ public class SideMenuController {
             return;
 
         try {
-            //System.out.println("pop time: " + System.currentTimeMillis());
             FXMLLoader fxmlLoader = new FXMLLoader();
             URL url = getClass().getResource(TASK_FORM_FXML);
             fxmlLoader.setLocation(url);

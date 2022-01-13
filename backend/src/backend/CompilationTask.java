@@ -74,26 +74,29 @@ public class CompilationTask extends Task {
         resOfTargetTaskRun.outPutData.add("* File being compiled: " + targetToExecute.userData);
         resOfTargetTaskRun.outPutData.add("* The command used to compile: " + fullCommand);
         ts.setTime(resOfTargetTaskRun.endTime);
-        resOfTargetTaskRun.outPutData.add("* The task finished compiling " + ts.toString().substring(10));
+        resOfTargetTaskRun.outPutData.add("* The task finished compiling: " + ts.toString().substring(10));
         resOfTargetTaskRun.outPutData.add("* Outcome of the task: " + targetToExecute.state);
         resOfTargetTaskRun.outPutData.add("* Time taken to compile: " + TimeUtil.ltd(resOfTargetTaskRun.totalTimeToRun));
-        if (!javacErrorMessage.isEmpty())
+        resOfTargetTaskRun.outPutData.add("* Targets opened : " + resOfTargetTaskRun.targetOpened);
+        if (!javacErrorMessage.isEmpty()) {
             resOfTargetTaskRun.outPutData.add("* Error message from javac: " + javacErrorMessage);
+            resOfTargetTaskRun.outPutData.add("* Target skipped due to failure: " + resOfTargetTaskRun.SkippedTargets);
+        }
     }
 
     private String getFullCommand(TaskTarget targetToExecute, accumulatorForWritingToFile resOfTargetTaskRun) {
         String FQN = targetToExecute.userData.replace(".", "\\");
         String srcFileToCompile = srcFolderPath + "\\" + FQN + ".java";
-        CheckIfFileExists(srcFileToCompile);
         String saveCompiledFilesTo = dstFolderPath;
         // spacing are important!!!!!! motherfucker
         return "javac " + "-d " + saveCompiledFilesTo + " -cp " + saveCompiledFilesTo + " " + srcFileToCompile;
     }
 
-    private void CheckIfFileExists(String srcFileToCompile) {
+    private String CheckIfFileExists(String srcFileToCompile) {
         File file = new File(srcFileToCompile);
-        if (file.exists() && file.isFile() && file.canRead())
-            throw new IllegalArgumentException("File " + srcFileToCompile + " does not exist and/or cannot be read");
+        if (!file.exists() || !file.isFile() || !file.canRead())
+            return ("File " + srcFileToCompile + " does not exist and/or cannot be read");
+        return "";
     }
     // ---------------------------- includes internal logic specific to CompilationTask -----------------------------  //
 }

@@ -268,10 +268,10 @@ public class AppController {
 
     //----------------------------------------------- task view ----------------------------------------------------- //
     public void goToTaskView(TaskArgs taskArgs) {
-        if (taskViewScreen == null) {
+        if (taskViewScreen == null)
             this.mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+        if (!taskArgs.isIncremental())
             createNewTaskController(taskArgs);
-        }
         // replace the center of the main screen with the task view
         mainScreen.setCenter(taskViewScreen);
     }
@@ -304,6 +304,10 @@ public class AppController {
 
     public void goToMainScreen() {
         mainScreen.setCenter(graphTableViewComponent);
+    }
+
+    public void resetListOnTaskView(boolean isIncremental) {
+        taskViewController.resetAllLists(isIncremental);
     }
     //----------------------------------------------- task view ----------------------------------------------------- //
 }
