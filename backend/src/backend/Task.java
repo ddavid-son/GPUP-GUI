@@ -1,7 +1,9 @@
 package backend;
 
+import backend.argumentsDTO.ProgressDto;
 import backend.argumentsDTO.TaskArgs;
 import backend.serialSets.SerialSetManger;
+import javafx.application.Platform;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -10,23 +12,36 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public abstract class Task implements Serializable {
 
-    protected final String path;
+    int numberOfThreads;
     List<String> waitingList = new LinkedList<>();
+    protected final String path;
+    ThreadPoolExecutor threadPool;
+    int numberOfFinishedTargets = 0;
+    boolean allGraphHasBeenProcessed;
+    private int numberOfThreadActive = 0;
+    final SerialSetManger serialSetManger;
     Map<String, TaskTarget> graph = new HashMap<>();
     List<accumulatorForWritingToFile> logData = new LinkedList<>();
-    boolean allGraphHasBeenProcessed;
-    final int numberOfThreads;
-    final SerialSetManger serialSetManger;
-    int numberOfFinishedTargets = 0;
-    ThreadPoolExecutor threadPool;
     final LinkedBlockingQueue<Runnable> threadPoolTaskQueue = new LinkedBlockingQueue<>();
+    Consumer<accumulatorForWritingToFile> finishedTargetLog;
+    Consumer<ProgressDto> finishedTarget;
 
+    private synchronized void updateNumberOfActiveThreads(boolean isUp) {
+        numberOfThreadActive = isUp ? numberOfThreadActive + 1 : numberOfThreadActive - 1;
+        /*if (numberOfThreadActive == numberOfThreads)
+            notifyAll();*/
+        System.out.println("-----------*******number of active threads: " + numberOfThreadActive);
+    }
 
+    // ---------------------------------------------- ctor and utils ------------------------------------------------ //
     public Task(boolean allGraphHasBeenProcessed, SerialSetManger serialSetManger,
-                int numberOfThreads, GraphManager graphManager, String path) {
+                int numberOfThreads, GraphManager graphManager, String path,
+                Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget) {
+        setConsumers(finishedTargetLog, finishedTarget);
         this.allGraphHasBeenProcessed = allGraphHasBeenProcessed;
         this.serialSetManger = serialSetManger;
         this.numberOfThreads = numberOfThreads;
@@ -34,51 +49,92 @@ public abstract class Task implements Serializable {
         buildTaskGraph(graphManager);
     }
 
+    protected void buildTaskGraph(GraphManager graphManager) {
+        for (Target target : graphManager.getTargetArray()) {
+            TaskTarget taskTarget = new TaskTarget(target);
+            if (target.getState() == Target.TargetState.WAITING) {
+                Platform.runLater(() -> {
+                    finishedTarget.accept(new ProgressDto(target.getName(), target.getState()));
+                });
+            }
+            waitForRunLater();
+            graph.put(target.getName(), taskTarget);
+        }
+    }
+
+    private void waitForRunLater() {
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
     protected synchronized void incrementFinishedThreadsCount() {
+
         numberOfFinishedTargets++;
     }
 
     protected static boolean missedTargets(TaskTarget target) {
+
         return target.state == Target.TargetState.FROZEN;
     }
 
-
-    protected void buildTaskGraph(GraphManager graphManager) {
-        for (Target target : graphManager.getTargetArray()) {
-            graph.put(target.getName(), new TaskTarget(target));
-        }
-    }
-
-
     boolean getAllGraphHasBeenProcessed() {
+
         return allGraphHasBeenProcessed;
     }
 
+    protected void setPoolSize() {
+        if (threadPool == null) {
+            threadPool = new ThreadPoolExecutor(numberOfThreads, numberOfThreads,
+                    1, TimeUnit.MILLISECONDS, threadPoolTaskQueue);
+            return;
+        }
+        threadPool.setCorePoolSize(numberOfThreads);
+        threadPool.setMaximumPoolSize(numberOfThreads);
+    }
 
+    // ---------------------------------------------- ctor and utils ------------------------------------------------ //
+
+
+    // --------------------------------------------------- run ------------------------------------------------------ //
     public void run(Consumer<String> print) {
-
-        threadPool = new ThreadPoolExecutor(numberOfThreads, numberOfThreads, 30,
-                TimeUnit.SECONDS, threadPoolTaskQueue);
         long graphRunStartTime = System.currentTimeMillis();
         String fullPath = createDirectoryToLogData(graphRunStartTime);
         accumulatorForWritingToFile resOfTargetTaskRun;
-
+        setPoolSize();
         while (numberOfFinishedTargets < waitingList.size()) {
+            //waitIfMaxNumberOfThreadAreAlreadyRunning();
             for (int i = 0; i < waitingList.size(); i++) {
                 TaskTarget targetToExecute = graph.get(waitingList.get(i));
                 // the order of the statements inside the if () is important - relaying on "&&" short-circuiting feature
                 // i.e. if the equals methode evaluates to false canIRun will not be called
                 if (targetToExecute.state.equals(Target.TargetState.WAITING) && serialSetManger.canIRun(targetToExecute.name)) {
                     targetToExecute.state = Target.TargetState.IN_PROCESS;
+                    Platform.runLater(() -> {
+                        finishedTarget.accept(new ProgressDto(targetToExecute.name, targetToExecute.state));
+                    });
                     resOfTargetTaskRun = new accumulatorForWritingToFile();
                     accumulatorForWritingToFile finalResOfTargetTaskRun = resOfTargetTaskRun;
                     Thread t = new Thread(() -> {
+                        updateNumberOfActiveThreads(true);
+                        System.out.println("target " + targetToExecute.name + " is running");
+                        System.out.println("blocking queues: " + targetToExecute.serialSetsName);
                         runTaskOnTarget(targetToExecute, finalResOfTargetTaskRun, print);
                         writeTargetResultsToLogFile(finalResOfTargetTaskRun, fullPath);
                         logData.add(finalResOfTargetTaskRun);
                         targetSummary(finalResOfTargetTaskRun, print);
                         serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
                         incrementFinishedThreadsCount();
+                        System.out.println("Finished " + targetToExecute.name);
+                        System.out.println("opening serial sets: " + targetToExecute.serialSetsName);
+                        updateNumberOfActiveThreads(false);
+                        System.out.println(targetToExecute.nameOfFailedOrSkippedDependencies);
+                        Platform.runLater(() -> {
+                            finishedTargetLog.accept(finalResOfTargetTaskRun);
+                            finishedTarget.accept(new ProgressDto(targetToExecute.name, targetToExecute.state));
+                        });
                     }, "thread #: " + numberOfFinishedTargets);
                     threadPool.execute(t);
                 }
@@ -94,10 +150,21 @@ public abstract class Task implements Serializable {
         numberOfFinishedTargets = 0;
     }
 
+    private void setConsumers(Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget) {
+        if (this.finishedTargetLog == null && this.finishedTarget == null) {
+            this.finishedTargetLog = finishedTargetLog;
+            this.finishedTarget = finishedTarget;
+        }
+    }
 
-    protected void changePoolSize(int newNumberOfThreads) {
-        threadPool.setMaximumPoolSize(4);
-        threadPool.setCorePoolSize(4);
+    private void waitIfMaxNumberOfThreadAreAlreadyRunning() {
+        if (numberOfThreadActive > numberOfThreads) {
+            try {
+                wait();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     protected void targetSummary(accumulatorForWritingToFile resOfTargetTaskRun, Consumer<String> print) {
@@ -190,15 +257,108 @@ public abstract class Task implements Serializable {
         }
     }
 
+    protected synchronized void updateOpenTargets(TaskTarget targetToExecute, accumulatorForWritingToFile resOfTargetTaskRun) {
+        for (String father : targetToExecute.requiredFor) {
+            graph.get(father).dependsOn.remove(targetToExecute.name);
+            if (graph.get(father).dependsOn.isEmpty())
+                resOfTargetTaskRun.targetOpened.add(father);
+        }
+    }
+
+    protected void invokeConsumer(TaskTarget targetToExecute, accumulatorForWritingToFile
+            resOfTargetTaskRun, Consumer<String> print) {
+        resOfTargetTaskRun.outPutData.add(
+                "3. task finished running on - " + targetToExecute.name + " task results: " + targetToExecute.state);
+
+        resOfTargetTaskRun.outPutData.add(
+                "4. targets opened to execution by this operation:\n" + (resOfTargetTaskRun.targetOpened.isEmpty() ?
+                        "no targets opened" : resOfTargetTaskRun.targetOpened));
+
+        if (targetToExecute.state.equals(Target.TargetState.FAILURE)) {
+            resOfTargetTaskRun.outPutData.add("5. targets that will be skipped due to: " + targetToExecute.name + "'s failure:\n" +
+                    (resOfTargetTaskRun.SkippedTargets.isEmpty() ? "no targets skipped" : resOfTargetTaskRun.SkippedTargets));
+        }
+    }
+
+    protected synchronized void removeAndUpdateDependenciesAfterSuccess(TaskTarget targetToExecute,
+                                                                        accumulatorForWritingToFile resOfTargetTaskRun) {
+
+        targetToExecute.requiredFor.forEach(neighbour -> {
+            graph.get(neighbour).dependsOn.remove(targetToExecute.name);
+            if (graph.get(neighbour).dependsOn.isEmpty()) {
+                if (!graph.get(neighbour).state.equals(Target.TargetState.SKIPPED) &&
+                        !waitingList.contains(neighbour)) {
+                    waitingList.add(neighbour);
+                    graph.get(neighbour).state = Target.TargetState.WAITING;
+                }
+                resOfTargetTaskRun.targetOpened.add(neighbour);
+            }
+        });
+    }
+
+    protected synchronized void notifyAllAncestorToBeSkipped(TaskTarget targetToExecute,
+                                                             accumulatorForWritingToFile resOfTargetTaskRun) {
+        if (!targetToExecute.state.equals(Target.TargetState.SKIPPED)) {
+            for (String ancestor : targetToExecute.requiredFor) {
+                if (!graph.get(ancestor).state.equals(Target.TargetState.SKIPPED)) {
+                    if (!resOfTargetTaskRun.SkippedTargets.contains(ancestor))
+                        resOfTargetTaskRun.SkippedTargets.add(ancestor);
+                    notifyAllAncestorToBeSkipped(graph.get(ancestor), resOfTargetTaskRun);
+                    graph.get(ancestor).state = Target.TargetState.SKIPPED;
+                    graph.get(ancestor).nameOfFailedOrSkippedDependencies.add(targetToExecute.name);
+                }
+            }
+        }
+    }
+    // --------------------------------------------------- run ------------------------------------------------------ //
+
+
+    // --------------------------------------------------- run ------------------------------------------------------ //
+
+    // ------------------------------------------------- getReady --------------------------------------------------- //
+    public void getReadyForIncrementalRun(TaskArgs taskArgs) {
+
+        updateMembersAccordingToTask(taskArgs);
+        numberOfThreads = taskArgs.getNumOfThreads();
+
+        // remove all succeeded targets from waiting list
+        waitingList = waitingList.stream()
+                .filter(targetName -> graph.get(targetName).state == Target.TargetState.FAILURE)
+                .collect(Collectors.toCollection(LinkedList::new));
+
+        waitingList.forEach(targetName -> {
+            graph.get(targetName).requiredFor.forEach(reqName ->
+                    graph.get(reqName).dependsOn.add(targetName));
+            graph.get(targetName).state = Target.TargetState.WAITING;
+        });
+
+        // RESETTING ALL SKIPPED TARGET TO THEIR ACTUAL STATE
+        for (TaskTarget target : graph.values()) {
+            if (target.state == Target.TargetState.SKIPPED) {
+                target.nameOfFailedOrSkippedDependencies.forEach(skippDep -> {
+                    if (!target.dependsOn.contains(skippDep))
+                        graph.get(skippDep).dependsOn.add(target.name);
+                });
+                target.state = Target.TargetState.FROZEN;
+                target.nameOfFailedOrSkippedDependencies.clear();
+            }
+        }
+
+        System.out.println("i will run maxinum " + numberOfThreads + " threads");
+
+        logData.clear();
+    }
+    // ------------------------------------------------- getReady --------------------------------------------------- //
+
+
     // ----------------------------------------- abstract Methods --------------------------------------------------- //
+    abstract void updateMembersAccordingToTask(TaskArgs taskArgs);
 
     abstract void runTaskOnTarget(TaskTarget targetToExecute, accumulatorForWritingToFile resOfTargetTaskRun,
                                   Consumer<String> print);
 
-    abstract void performSimulation(accumulatorForWritingToFile resOfTargetTaskRun, Consumer<String> print);
-
-    abstract void getReadyForIncrementalRun(TaskArgs taskArgs);
     // ----------------------------------------- abstract Methods --------------------------------------------------- //
+
 
     public class TaskTarget implements Serializable {
 
@@ -228,6 +388,36 @@ public abstract class Task implements Serializable {
             this.serialSetsName.addAll(target.getSerialSetsName());
         }
 
+        public String getName() {
+            return this.name;
+        }
 
+        public String getUserData() {
+            return this.userData;
+        }
+
+        public Target.TargetType getType() {
+            return this.type;
+        }
+
+        public Target.TargetState getState() {
+            return this.state;
+        }
+
+        public List<String> getDependsOnNames() {
+            return this.dependsOn;
+        }
+
+        public List<String> getRequiredForNames() {
+            return this.requiredFor;
+        }
+
+        public List<String> getNameOfFailedOrSkippedDependencies() {
+            return this.nameOfFailedOrSkippedDependencies;
+        }
+
+        public List<String> getSerialSetsName() {
+            return this.serialSetsName;
+        }
     }
 }

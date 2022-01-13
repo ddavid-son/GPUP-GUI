@@ -1,5 +1,6 @@
 package backend;
 
+import backend.argumentsDTO.ProgressDto;
 import backend.argumentsDTO.TaskArgs;
 import dataTransferObjects.GraphTargetsTypeInfoDTO;
 import dataTransferObjects.InfoAboutTargetDTO;
@@ -8,6 +9,7 @@ import dataTransferObjects.WhatIfDTO;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 
 
 public interface Engine extends Serializable {
@@ -34,7 +36,8 @@ public interface Engine extends Serializable {
 
     WhatIfDTO getWhatIf(String targetName, GraphManager.RelationType type);
 
-    void runTaskOnGraph(TaskArgs taskArgs);
+    void runTaskOnGraph(TaskArgs taskArgs, Consumer<accumulatorForWritingToFile> finishedTargetLog,
+                        Consumer<ProgressDto> finishedTarget);
 
     boolean isGraphAccessible();
 

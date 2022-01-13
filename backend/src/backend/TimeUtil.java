@@ -20,4 +20,21 @@ public class TimeUtil {
 
         return timeString;
     }
+
+    //convert long to now
+    public static String ltn(long time) {
+        String timeString = "";
+        long hour = time / HOUR;
+        long minute = (time - hour * HOUR) / MINUTE;
+        long second = (time - hour * HOUR - minute * MINUTE) / SECOND;
+        long milliSecond = time - hour * HOUR - minute * MINUTE - second * SECOND;
+
+        timeString += hour > 0 ? hour + ":" : "";
+        timeString += minute > 0 ? minute + ":" : "";
+        timeString += second > 0 ? second + "." : "";
+        timeString += milliSecond > 0 ? milliSecond : "";
+
+        return timeString;
+    }
+
 }

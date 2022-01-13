@@ -1,6 +1,6 @@
 package backend;
 
-import backend.argumentsDTO.SimulationArgs;
+import backend.argumentsDTO.ProgressDto;
 import backend.argumentsDTO.TaskArgs;
 import backend.xmlhandler.GPUPDescriptor;
 import backend.xmlhandler.GPUPTarget;
@@ -14,6 +14,7 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.*;
 import java.util.*;
+import java.util.function.Consumer;
 
 
 public class Execution implements Engine, Serializable {
@@ -23,6 +24,8 @@ public class Execution implements Engine, Serializable {
     GraphManager costumeGraphManager;
     private int maxParallelism;
     private final static String JAXB_XML_GENERATED_CLASSES_PATH = "backend.xmlhandler";
+    private Consumer<accumulatorForWritingToFile> finishedTargetLog;
+    private Consumer<ProgressDto> finishedTarget;
 
     //----------------------------------------- read/write state from/to file ----------------------------------------//
     @Override
@@ -154,45 +157,21 @@ public class Execution implements Engine, Serializable {
 
 
     //--------------------------------------------------- run task --------------------------------------------------//
-    public void runSimulationTaskOnGraph(SimulationArgs simulationArgs) {
-
-        //checkIfGraphIsLoaded();
-        /*boolean createNewTask = true;
-
-        if (task == null && simulationArgs.isIncremental()) {
-            System.out.println("no previous run detected, task will start from scratch. ");
-        } else if (task != null && task.getAllGraphHasBeenProcessed() && simulationArgs.isIncremental()) {
-            System.out.println("all graph has been processed, task will start from scratch. ");
-        } else if (!simulationArgs.isIncremental()) {
-            //do nothing
-        } else {
-            task.getReadyForIncrementalRun(simulationArgs);
-            createNewTask = false;
-        }
-
-        if (createNewTask) {
-            task = new SimulationTask(simulationArgs, costumeGraphManager, workingDirectory, *//*simulationArgs.getNumOfThreads(),*//*
-                    costumeGraphManager.getSerialSetManager());
-        }
-
-        //todo: need to remove this sout after testing
-        task.run(System.out::println);*/
-    }
-
     //build graphManager from list of targets
     private void buildCostumeGraphManager(List<String> targets) {
         costumeGraphManager = new GraphManager(targets, graphManager);
     }
 
     @Override
-    public void runTaskOnGraph(TaskArgs taskArgs) {
-
+    public void runTaskOnGraph(TaskArgs taskArgs, Consumer<accumulatorForWritingToFile> finishedTargetLog,
+                               Consumer<ProgressDto> finishedTarget) {
+        this.finishedTargetLog = finishedTargetLog;
+        this.finishedTarget = finishedTarget;
         checkIfGraphIsLoaded();
         boolean createNewTask = true;
 
         if (!taskArgs.isIncremental())
             buildCostumeGraphManager(taskArgs.getTargetsSelectedForGraph());
-
 
         if (task == null && taskArgs.isIncremental()) {
             System.out.println("no previous run detected, task will start from scratch. ");
@@ -206,47 +185,26 @@ public class Execution implements Engine, Serializable {
         }
 
         if (createNewTask) {
-            switch (taskArgs.getTaskType()) {
-                case SIMULATION:
-                    //maybe the consumer can be a thread ???
-                    task = new SimulationTask(taskArgs, costumeGraphManager, workingDirectory,
-                            costumeGraphManager.getSerialSetManager());
-                    break;
-                case COMPILATION:
-                    task = new CompilationTask(taskArgs, costumeGraphManager, workingDirectory,
-                            costumeGraphManager.getSerialSetManager());
-                    break;
-            }
+            createTask(taskArgs);
         }
 
         //todo: need to remove this sout after testing
         task.run(System.out::println);
     }
 
- /*   private void runCompilationTaskOnGraph(CompilationArgs compilationArgs) {
-        checkIfGraphIsLoaded();
-        boolean createNewTask = true;
-
-        if (task == null && compilationArgs.isIncremental()) {
-            System.out.println("no previous run detected, task will start from scratch. ");
-        } else if (task != null && task.getAllGraphHasBeenProcessed() && compilationArgs.isIncremental()) {
-            System.out.println("all graph has been processed, task will start from scratch. ");
-        } else if (!compilationArgs.isIncremental()) {
-            //do nothing
-        } else {
-            //task.getReadyForIncrementalRun();
-            createNewTask = false;
+    private void createTask(TaskArgs taskArgs) {
+        switch (taskArgs.getTaskType()) {
+            case SIMULATION:
+                //maybe the consumer can be a thread ???
+                task = new SimulationTask(taskArgs, costumeGraphManager, workingDirectory,
+                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget);
+                break;
+            case COMPILATION:
+                task = new CompilationTask(taskArgs, costumeGraphManager, workingDirectory,
+                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget);
+                break;
         }
-
-        if (createNewTask) {
-            task = new CompilationTask();
-            // todo check if this needs to be costumeGraphManager instead of graphManager
-        }
-
-        //todo: need to remove this sout after testing
-        task.run(System.out::println);
-
-    }*/
+    }
     //--------------------------------------------------- run task ---------------------------------------------------//
 
 
@@ -486,7 +444,6 @@ public class Execution implements Engine, Serializable {
 
     @Override
     public int getMaxThreadCount() {
-
         return this.maxParallelism;
     }
 

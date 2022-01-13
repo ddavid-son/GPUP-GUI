@@ -5,11 +5,11 @@ import app.findAllPaths.FindAllPathsController;
 import app.graphTableView.GraphTableViewController;
 import app.relatedView.RelatedViewController;
 import app.sideMenu.SideMenuController;
+import app.taskView.TaskViewController;
 import backend.Engine;
 import backend.Execution;
 import backend.GraphManager;
 import backend.argumentsDTO.TaskArgs;
-import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -44,6 +44,14 @@ public class AppController {
     @FXML
     private GraphTableViewController graphTableViewComponentController;
 
+    TaskViewController taskViewController;
+
+    BorderPane mainScreen;
+    ScrollPane taskViewScreen;
+
+    //@FXML
+    //private TaskViewController taskViewController;
+
     public List<String> targetFromPreviousRun;
 
 
@@ -74,6 +82,7 @@ public class AppController {
             graphTableViewComponentController.setAllComponentsToEnabled();
             graphTableViewComponentController.loadGraphToTableView(execution.getInfoAboutAllTargets());
             graphTableViewComponentController.loadSummaryToTableView(execution.getGraphInfo());
+            mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
             activeFile = selectedFile;
         } catch (IllegalArgumentException e) {
             handleErrors(
@@ -198,15 +207,15 @@ public class AppController {
     }
 
     public void runTask(TaskArgs taskArgs) {
-        BorderPane mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+
         List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
         if (taskArgs.isWhatIf()) {
             targetNames = getAllWhatIfResults(targetNames, taskArgs.getRelationType());
         }
         targetFromPreviousRun = targetNames; // here for the visibility of Incremental button
         taskArgs.getTargetsSelectedForGraph().addAll(targetNames);
-        delegateExecutionOfTaskToAnotherThread(taskArgs);
-
+        goToTaskView(taskArgs);
+        taskViewController.delegateExecutionOfTaskToAnotherThread(taskArgs);
         //TODO: make update methods to get the data from the task and update the graph LIVE
     }
 
@@ -219,22 +228,21 @@ public class AppController {
         return targetNames.stream().distinct().collect(Collectors.toList());
     }
 
-    private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
+  /*  private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
         Thread thread = new Thread(() -> {
             try {
                 execution.runTaskOnGraph(taskArgs);
             } catch (Exception e) {
                 Platform.runLater(() -> handleErrors(
                         e,
-                        e.getMessage(),
+                        Arrays.toString(e.getStackTrace()),
                         "Error running task"));
             }
             // TODO: maybe down here will handle the summary data fetching with runLater to update the UI
         });
         thread.setName("Task thread");
         thread.start();
-
-    }
+    }*/
 
     public boolean currentSelectedTargetsAreTheSameAsPreviousRun() {
         List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
@@ -256,4 +264,46 @@ public class AppController {
             throw new RuntimeException(e.getMessage());
         }
     }
+
+
+    //----------------------------------------------- task view ----------------------------------------------------- //
+    public void goToTaskView(TaskArgs taskArgs) {
+        if (taskViewScreen == null) {
+            this.mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+            createNewTaskController(taskArgs);
+        }
+        // replace the center of the main screen with the task view
+        mainScreen.setCenter(taskViewScreen);
+    }
+
+    public void goBackToTaskView() {
+        if (taskViewScreen != null) {
+            mainScreen.setCenter(taskViewScreen);
+        }
+    }
+
+    private void createNewTaskController(TaskArgs taskArgs) {
+        try {
+            URL url = getClass().getResource("/resources/TaskView.fxml");
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load();
+            taskViewController = fxmlLoader.getController();
+
+            taskViewController.setAppController(this, execution);
+            taskViewController.setTaskView(taskArgs);
+            this.taskViewScreen = (ScrollPane) root;
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void setTaskViewController(TaskViewController taskViewController) {
+        this.taskViewController = taskViewController;
+    }
+
+    public void goToMainScreen() {
+        mainScreen.setCenter(graphTableViewComponent);
+    }
+    //----------------------------------------------- task view ----------------------------------------------------- //
 }

@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -19,6 +20,9 @@ import java.util.stream.Collectors;
 public class GraphTableViewController {
 
     private AppController appController;
+
+    @FXML
+    private Button goToTaskViewBtn;
 
     @FXML
     private TableView<InfoAboutTargetDTO> graphTable;
@@ -79,6 +83,11 @@ public class GraphTableViewController {
 
     private ObservableList<GraphTargetsTypeInfoDTO> dataForStateTable;
 
+
+    @FXML
+    public void onGoToTaskViewBtnClicked() {
+        appController.goBackToTaskView();
+    }
 
     public void setAppController(AppController appController) {
         this.appController = appController;

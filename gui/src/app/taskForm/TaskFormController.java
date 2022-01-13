@@ -99,9 +99,7 @@ public class TaskFormController {
     // ----------------------------------------------- Simulation Components ---------------------------------------- //
 
     private AppController appController;
-
     private File currentFileInTask;
-
     private SideMenuController sideMenuController;
 
     // -------------------------------------------- what if methods -------------------------------------------------- /
@@ -166,7 +164,7 @@ public class TaskFormController {
     }
 
     private void runCompilationTask(boolean isIncremental) {
-        if (!(srcFolder != null && dstFolder != null)) {
+        if (!(srcFolder != null && dstFolder != null && srcFolder.exists() && dstFolder.exists())) {
             appController.handleErrors(
                     null,
                     "Source and destination folders must be set before running a compilation task.",
@@ -184,8 +182,8 @@ public class TaskFormController {
                 getWhatIfDownIsSelected() ?
                         GraphManager.RelationType.DEPENDS_ON :
                         GraphManager.RelationType.REQUIRED_FOR,
-                this.srcFolder.getName(),
-                this.dstFolder.getName()
+                this.srcFolder.toString(),
+                this.dstFolder.toString()
         ));
     }
 
@@ -271,7 +269,7 @@ public class TaskFormController {
         }
 
         ((Stage) newRunBtn.getScene().getWindow()).close();
-        appController.runTask(new SimulationArgs(
+        SimulationArgs simulationArgs = new SimulationArgs(
                 ((double) successField.getValue()) / 100,
                 ((double) warningField.getValue()) / 100,
                 sleepTimeField.getValue(),
@@ -282,7 +280,9 @@ public class TaskFormController {
                 getWhatIfDownIsSelected() ?
                         GraphManager.RelationType.DEPENDS_ON :
                         GraphManager.RelationType.REQUIRED_FOR
-        ));
+        );
+        appController.runTask(simulationArgs);
+        /*appController.goToTaskView(simulationArgs);*/
     }
 
     private boolean assertSimulationUserInput() {
