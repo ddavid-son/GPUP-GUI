@@ -5,14 +5,16 @@ import backend.*;
 import backend.argumentsDTO.ProgressDto;
 import backend.argumentsDTO.TaskArgs;
 import javafx.application.Platform;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.layout.StackPane;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 public class TaskViewController {
 
@@ -62,13 +64,21 @@ public class TaskViewController {
     private int totalNumberOfTargets;
     private int finishedNumberTargets = 0;
 
-    Set<StackPane> frozenListItems = new HashSet<>();
-    Set<StackPane> waitingListItems = new HashSet<>();
-    Set<StackPane> failedListItems = new HashSet<>();
-    Set<StackPane> skippedListItems = new HashSet<>();
-    Set<StackPane> finishedListItems = new HashSet<>();
-    Set<StackPane> inProcessListItems = new HashSet<>();
-    Set<String> allFinishedTasks = new HashSet<>();
+    List<StackPane> frozenListItems = new ArrayList<>();
+    List<StackPane> waitingListItems = new ArrayList<>();
+    List<StackPane> failedListItems = new ArrayList<>();
+    List<StackPane> skippedListItems = new ArrayList<>();
+    List<StackPane> finishedListItems = new ArrayList<>();
+    List<StackPane> inProcessListItems = new ArrayList<>();
+    List<String> allFinishedTasks = new ArrayList<>();
+
+    ObservableList<StackPane> obsFrozenList;
+    ObservableList<StackPane> obsWaitingList;
+    ObservableList<StackPane> obsFailedList;
+    ObservableList<StackPane> obsSkippedList;
+    ObservableList<StackPane> obsFinishedList;
+    ObservableList<StackPane> obsInProcessList;
+    ObservableList<String> obsAllFinishedTasks;
 
 
     @FXML
@@ -93,7 +103,7 @@ public class TaskViewController {
 
     public void setTaskView(TaskArgs taskArgs) {
         totalNumberOfTargets = taskArgs.getTargetsSelectedForGraph().size();
-        insertAllTargetsToFrozenList(taskArgs);
+        //insertAllTargetsToFrozenList(taskArgs);
 
         taskTypeHeaderLabel.setText(taskArgs.getTaskType().toString());
         numberOfThreadsLabel.setText("Max number of threads: " + taskArgs.getNumOfThreads());
@@ -106,13 +116,24 @@ public class TaskViewController {
                         1)
         );
 
-/*        inProcessList.setItems(FXCollections.observableArrayList(inProcessListItems));
-        finishedList.setItems(FXCollections.observableArrayList(finishedListItems));
-        skippedList.setItems(FXCollections.observableArrayList(skippedListItems));
-        failedList.setItems(FXCollections.observableArrayList(failedListItems));
-        waitingList.setItems(FXCollections.observableArrayList(waitingListItems));
-        frozenList.setItems(FXCollections.observableArrayList(frozenListItems));*/
+        obsFailedList = FXCollections.observableList(failedListItems);
+        obsFrozenList = FXCollections.observableList(frozenListItems);
+        obsInProcessList = FXCollections.observableList(inProcessListItems);
+        obsSkippedList = FXCollections.observableList(skippedListItems);
+        obsWaitingList = FXCollections.observableList(waitingListItems);
+        obsFinishedList = FXCollections.observableList(finishedListItems);
 
+
+        inProcessList.setItems(obsInProcessList);
+        finishedList.setItems(obsFinishedList);
+        skippedList.setItems(obsSkippedList);
+        failedList.setItems(obsFailedList);
+        waitingList.setItems(obsWaitingList);
+        frozenList.setItems(obsFrozenList);
+
+        taskArgs.getTargetsSelectedForGraph().forEach(target -> {
+            obsFrozenList.add(new TaskCircle(target, Target.TargetState.FROZEN).getStackPane());
+        });
 
         progressBar.setProgress(0);
     }
@@ -138,8 +159,6 @@ public class TaskViewController {
     private void handelFinishedTask(ProgressDto progressDto) {
         //updateProgressBar(taskTarget);
         manageListsMovement(progressDto);
-
-
     }
 
     private void manageListsMovement(ProgressDto targetLog) {
@@ -162,70 +181,62 @@ public class TaskViewController {
     }
 
     private void handleListInCasOfInProcess(ProgressDto targetLog, StackPane temp) {
-        for (StackPane stackPane : waitingListItems) {
+        for (StackPane stackPane : obsWaitingList) {
             if (stackPane.getId().equals(targetLog.getTargetName())) {
                 temp = stackPane;
-                waitingListItems.remove(stackPane);
                 if (!inProcessListItems.contains(temp)) {
-                    inProcessListItems.add(temp);
-                    inProcessList.getItems().setAll(inProcessListItems);
+                    obsInProcessList.add(temp);
                 }
-                return;
+                break;
             }
         }
-        waitingList.getItems().setAll(waitingListItems);
+        obsWaitingList.remove(temp);
     }
 
     private void handelListInCaseOfStart(ProgressDto targetLog, StackPane temp) {
 
-        for (StackPane stackPane : frozenListItems) {
+        for (StackPane stackPane : obsFrozenList) {
             if (stackPane.getId().equals(targetLog.getTargetName())) {
                 temp = stackPane;
-                frozenListItems.remove(temp);
                 switch (targetLog.getTargetState()) {
                     case WAITING:
                         if (!waitingListItems.contains(temp)) {
-                            waitingListItems.add(temp);
-                            waitingList.getItems().setAll(waitingListItems);
+                            obsWaitingList.add(temp);
                         }
                         break;
                     case SKIPPED:
                         if (!skippedListItems.contains(temp)) {
-                            skippedListItems.add(temp);
-                            skippedList.getItems().setAll(skippedListItems);
+                            obsSkippedList.add(temp);
                         }
                         break;
                 }
-                return;
+                break;
             }
         }
-        frozenList.getItems().setAll(frozenListItems);
+        obsFrozenList.remove(temp);
     }
 
     private void handelListInCaseOfFinished(ProgressDto targetLog, StackPane temp) {
-        for (StackPane stackPane : inProcessListItems) {
+        for (StackPane stackPane : obsInProcessList) {
             if (stackPane.getId().equals(targetLog.getTargetName())) {
                 temp = stackPane;
-                inProcessListItems.remove(stackPane);
                 switch (targetLog.getTargetState()) {
                     case FAILURE:
                         if (!failedListItems.contains(temp)) {
-                            failedListItems.add(stackPane);
-                            failedList.getItems().setAll(failedListItems);
+                            obsFailedList.add(temp);
                         }
                         break;
                     case WARNING:
                     case SUCCESS:
                         if (!finishedListItems.contains(temp)) {
-                            finishedListItems.add(temp);
-                            finishedList.getItems().setAll(finishedListItems);
+                            obsFinishedList.add(temp);
                         }
                         break;
                 }
-                return;
+                break;
             }
         }
-        inProcessList.getItems().setAll(inProcessListItems);
+        obsInProcessList.remove(temp);
     }
 
     private void updateProgressBar(Task.TaskTarget taskTarget) {
