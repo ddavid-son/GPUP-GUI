@@ -309,5 +309,14 @@ public class AppController {
     public void resetListOnTaskView(boolean isIncremental) {
         taskViewController.resetAllLists(isIncremental);
     }
+
+    public void resumeExecution() {
+        execution.resumeTask();
+
+    }
+
+    public void pauseExecution() {
+        execution.pauseTask();
+    }
     //----------------------------------------------- task view ----------------------------------------------------- //
 }

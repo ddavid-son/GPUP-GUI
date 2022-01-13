@@ -83,7 +83,7 @@
                         <Insets top="5.0" />
                      </GridPane.margin>
                   </Button>
-                  <Button fx:id="playPauseBtn" alignment="CENTER" mnemonicParsing="false" onAction="#onPlayPauseBtnClicked" text="PLAY PAUSE" GridPane.columnIndex="2" GridPane.rowIndex="1" />
+                  <Button fx:id="playPauseBtn" alignment="CENTER" mnemonicParsing="false" onAction="#onPlayPauseBtnClicked" GridPane.columnIndex="2" GridPane.rowIndex="1" />
                   <HBox alignment="CENTER" spacing="10.0" GridPane.columnIndex="3" GridPane.rowIndex="1">
                      <children>
                         <Label lineSpacing="5.0" text="Number Of Threads: " wrapText="true" HBox.hgrow="NEVER" />

@@ -192,6 +192,18 @@ public class Execution implements Engine, Serializable {
         task.run(System.out::println);
     }
 
+    @Override
+    public void pauseTask() {
+        if (task != null)
+            task.pauseTask();
+    }
+
+    @Override
+    public void resumeTask() {
+        if (task != null)
+            task.resumeTask();
+    }
+
     private void createTask(TaskArgs taskArgs) {
         switch (taskArgs.getTaskType()) {
             case SIMULATION:

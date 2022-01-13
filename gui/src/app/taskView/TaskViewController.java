@@ -5,6 +5,7 @@ import backend.*;
 import backend.argumentsDTO.ProgressDto;
 import backend.argumentsDTO.TaskArgs;
 import javafx.application.Platform;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
@@ -84,6 +85,10 @@ public class TaskViewController {
     ObservableList<StackPane> obsAllTargets;
     ObservableList<String> obsAllFinishedTasks;
 
+    private boolean paused = false;
+
+    SimpleDoubleProperty progressBarProperty = new SimpleDoubleProperty(0);
+
     List<String> summery = new ArrayList<>();
 
     @FXML
@@ -93,8 +98,15 @@ public class TaskViewController {
 
     @FXML
     void onPlayPauseBtnClicked(ActionEvent event) {
-        for (String s : summery) {
-            logListViw.appendText(s + "\n");
+        // replace icon to pause
+        if (!paused) {
+            appController.pauseExecution();
+            playPauseBtn.setGraphic(appController.getIcon("/icons/playBtnIcon.png", 40));
+            paused = true;
+        } else {
+            appController.resumeExecution();
+            playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 40));
+            paused = false;
         }
     }
 
@@ -122,6 +134,18 @@ public class TaskViewController {
                         1)
         );
 
+        handelListAndObservabels();
+        playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 40));
+
+        taskArgs.getTargetsSelectedForGraph().forEach(target -> {
+            obsAllTargets.add(new TaskCircle(target, Target.TargetState.FROZEN).getStackPane());
+        });
+
+        obsFrozenList.addAll(obsAllTargets);
+        progressBar.setProgress(0F);
+    }
+
+    private void handelListAndObservabels() {
         obsAllTargets = FXCollections.observableList(allTargets);
         obsFailedList = FXCollections.observableList(failedListItems);
         obsFrozenList = FXCollections.observableList(frozenListItems);
@@ -136,14 +160,6 @@ public class TaskViewController {
         failedList.setItems(obsFailedList);
         waitingList.setItems(obsWaitingList);
         frozenList.setItems(obsFrozenList);
-
-        taskArgs.getTargetsSelectedForGraph().forEach(target -> {
-            obsAllTargets.add(new TaskCircle(target, Target.TargetState.FROZEN).getStackPane());
-        });
-
-        obsFrozenList.addAll(obsAllTargets);
-
-        progressBar.setProgress(0);
     }
 
     private void handelLogOfTask(accumulatorForWritingToFile targetLog) {
@@ -298,11 +314,12 @@ public class TaskViewController {
     public void resetAllLists(boolean isIncremental) {
         if (isIncremental) {
             obsFrozenList.clear();
+            obsWaitingList.clear();
+
             obsFrozenList.addAll(obsSkippedList);
             obsSkippedList.clear();
 
-            obsWaitingList.clear();
-            obsWaitingList.addAll(obsFailedList);
+            obsFrozenList.addAll(obsFailedList);
             obsFailedList.clear();
 
             obsFinishedList.clear();
@@ -318,5 +335,8 @@ public class TaskViewController {
             obsFrozenList.addAll(obsFailedList);
             obsFailedList.clear();
         }
+        allFinishedTasks.clear();
+        totalNumberOfTargets = obsFrozenList.size();
+        progressBar.progressProperty().setValue(0);
     }
 }

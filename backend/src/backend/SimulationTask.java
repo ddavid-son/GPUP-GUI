@@ -66,6 +66,7 @@ public class SimulationTask extends Task implements Serializable {
         try {
             if (isRandom) {
                 int randomNumberToWait = random.nextInt(msToRun);
+                resOfTargetTaskRun.outPutData.add(" * task was ran by thread: " + Thread.currentThread().getName());
                 resOfTargetTaskRun.outPutData.add("  * going to sleep for " + TimeUtil.ltd(randomNumberToWait));
 
                 resOfTargetTaskRun.outPutData.add("  * going to sleep, good night " + ts.toString().substring(10));

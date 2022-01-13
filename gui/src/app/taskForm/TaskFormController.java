@@ -275,9 +275,7 @@ public class TaskFormController {
             );
             return;
         }
-
-        // todo decide if i want to keep the task form open for easier incremental run
-        //((Stage) newRunBtn.getScene().getWindow()).close();
+        ((Stage) newRunBtn.getScene().getWindow()).close();
         SimulationArgs simulationArgs = new SimulationArgs(
                 ((double) successField.getValue()) / 100,
                 ((double) warningField.getValue()) / 100,

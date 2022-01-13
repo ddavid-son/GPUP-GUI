@@ -70,6 +70,7 @@ public class CompilationTask extends Task {
 
         resOfTargetTaskRun.totalTimeToRun = resOfTargetTaskRun.endTime - resOfTargetTaskRun.startTime;
         resOfTargetTaskRun.outPutData.add("* Task working on target: " + targetToExecute.name);
+        resOfTargetTaskRun.outPutData.add("* Task was ran by thread: " + Thread.currentThread().getName());
         resOfTargetTaskRun.outPutData.add("* Task started compiling: " + ts.toString().substring(10));
         resOfTargetTaskRun.outPutData.add("* File being compiled: " + targetToExecute.userData);
         resOfTargetTaskRun.outPutData.add("* The command used to compile: " + fullCommand);

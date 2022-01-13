@@ -8,6 +8,7 @@ import javafx.application.Platform;
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -26,14 +27,26 @@ public abstract class Task implements Serializable {
     final SerialSetManger serialSetManger;
     Map<String, TaskTarget> graph = new HashMap<>();
     List<accumulatorForWritingToFile> logData = new LinkedList<>();
-    final LinkedBlockingQueue<Runnable> threadPoolTaskQueue = new LinkedBlockingQueue<>();
+    BlockingQueue<Runnable> threadPoolTaskQueue;
     Consumer<accumulatorForWritingToFile> finishedTargetLog;
     Consumer<ProgressDto> finishedTarget;
+    Thread mainThread;
+
+    public void pauseTask() {
+        mainThread.suspend();
+        threadPoolTaskQueue = threadPool.getQueue();
+        threadPool.shutdownNow();
+    }
+
+    public void resumeTask() {
+        threadPool = new ThreadPoolExecutor(numberOfThreads, numberOfThreads,
+                1, TimeUnit.MILLISECONDS, threadPoolTaskQueue);
+        mainThread.resume();
+    }
+
 
     private synchronized void updateNumberOfActiveThreads(boolean isUp) {
         numberOfThreadActive = isUp ? numberOfThreadActive + 1 : numberOfThreadActive - 1;
-        /*if (numberOfThreadActive == numberOfThreads)
-            notifyAll();*/
         System.out.println("-----------*******number of active threads: " + numberOfThreadActive);
     }
 
@@ -86,9 +99,12 @@ public abstract class Task implements Serializable {
     }
 
     protected void setPoolSize() {
-        if (threadPool == null) {
+        if (threadPool == null || threadPool.isShutdown()) {
             threadPool = new ThreadPoolExecutor(numberOfThreads, numberOfThreads,
-                    1, TimeUnit.MILLISECONDS, threadPoolTaskQueue);
+                    1, TimeUnit.MILLISECONDS, threadPoolTaskQueue == null ?
+                    new LinkedBlockingQueue<>() :
+                    threadPoolTaskQueue
+            );
             return;
         }
         threadPool.setCorePoolSize(numberOfThreads);
@@ -100,13 +116,14 @@ public abstract class Task implements Serializable {
 
     // --------------------------------------------------- run ------------------------------------------------------ //
     public void run(Consumer<String> print) {
+        mainThread = Thread.currentThread();
         long graphRunStartTime = System.currentTimeMillis();
         String fullPath = createDirectoryToLogData(graphRunStartTime);
         accumulatorForWritingToFile resOfTargetTaskRun;
         setPoolSize();
         while (numberOfFinishedTargets < waitingList.size()) {
-            //waitIfMaxNumberOfThreadAreAlreadyRunning();
             for (int i = 0; i < waitingList.size(); i++) {
+                //waitIfMaxNumberOfThreadAreAlreadyRunning();
                 TaskTarget targetToExecute = graph.get(waitingList.get(i));
                 // the order of the statements inside the if () is important - relaying on "&&" short-circuiting feature
                 // i.e. if the equals methode evaluates to false canIRun will not be called
@@ -135,6 +152,7 @@ public abstract class Task implements Serializable {
                 }
             }
         }
+        threadPool.shutdown();
 
         long graphRunEndTime = System.currentTimeMillis();
         print.accept("Simulation finished in " +
@@ -159,16 +177,6 @@ public abstract class Task implements Serializable {
         if (this.finishedTargetLog == null && this.finishedTarget == null) {
             this.finishedTargetLog = finishedTargetLog;
             this.finishedTarget = finishedTarget;
-        }
-    }
-
-    private void waitIfMaxNumberOfThreadAreAlreadyRunning() {
-        if (numberOfThreadActive > numberOfThreads) {
-            try {
-                wait();
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
         }
     }
 

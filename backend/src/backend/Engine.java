@@ -46,4 +46,8 @@ public interface Engine extends Serializable {
     List<String> getAllTargetNames();
 
     int getMaxThreadCount();
+
+    void pauseTask();
+
+    void resumeTask();
 }
