@@ -4,6 +4,7 @@ import app.circleDisplay.CircleDisplayController;
 import app.findAllPaths.FindAllPathsController;
 import app.graphTableView.GraphTableViewController;
 import app.relatedView.RelatedViewController;
+import app.serialSet.SerialSetController;
 import app.sideMenu.SideMenuController;
 import app.taskView.TaskViewController;
 import backend.Engine;
@@ -60,6 +61,7 @@ public class AppController {
     private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/circleDisplay.fxml";
 
     private File activeFile;
+    private ScrollPane serialSetScreen;
 
     @FXML
     public void initialize() {
@@ -230,22 +232,6 @@ public class AppController {
         return targetNames.stream().distinct().collect(Collectors.toList());
     }
 
-  /*  private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
-        Thread thread = new Thread(() -> {
-            try {
-                execution.runTaskOnGraph(taskArgs);
-            } catch (Exception e) {
-                Platform.runLater(() -> handleErrors(
-                        e,
-                        Arrays.toString(e.getStackTrace()),
-                        "Error running task"));
-            }
-            // TODO: maybe down here will handle the summary data fetching with runLater to update the UI
-        });
-        thread.setName("Task thread");
-        thread.start();
-    }*/
-
     public boolean currentSelectedTargetsAreTheSameAsPreviousRun() {
         List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
         return targetNames.equals(targetFromPreviousRun);
@@ -298,6 +284,32 @@ public class AppController {
         }
     }
 
+    public void showSerialSetSummary() {
+        if (serialSetScreen == null)
+            createSerialSet();
+        if (mainScreen.getRight() == serialSetScreen)
+            mainScreen.setRight(null);
+        else
+            mainScreen.setRight(serialSetScreen);
+    }
+
+    private void createSerialSet() {
+        try {
+            URL url = getClass().getResource("/resources/serialSetView.fxml");
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load();
+            SerialSetController serialSetController = fxmlLoader.getController();
+
+            serialSetController.setAppController(this, execution);
+            serialSetController.setSerialSet();
+
+            this.serialSetScreen = (ScrollPane) root;
+        } catch (IOException e) {
+            //e.printStackTrace();
+        }
+    }
+
     public void setTaskViewController(TaskViewController taskViewController) {
         this.taskViewController = taskViewController;
     }
@@ -321,5 +333,7 @@ public class AppController {
     public void setNumberOfThreads(Integer value) {
         execution.setNumberOfThreads(value);
     }
+
+
     //----------------------------------------------- task view ----------------------------------------------------- //
 }

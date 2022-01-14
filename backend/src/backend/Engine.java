@@ -52,4 +52,8 @@ public interface Engine extends Serializable {
     void resumeTask();
 
     void setNumberOfThreads(Integer value);
+
+    List<String> getSerialSetList();
+
+    List<String> getSerialSetTarget(String serialSetName);
 }

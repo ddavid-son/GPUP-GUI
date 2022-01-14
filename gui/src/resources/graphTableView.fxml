@@ -73,6 +73,7 @@
                   <Insets left="20.0" top="5.0" />
                </GridPane.margin>
             </Button>
+            <Button fx:id="serialSetSummaryBtn" mnemonicParsing="false" onAction="#onSerialSetSummaryBtnClicked" text="serial set summary" GridPane.columnIndex="4" GridPane.halignment="CENTER" GridPane.rowIndex="6" GridPane.valignment="CENTER" />
             </children>
         </GridPane>
     </content>

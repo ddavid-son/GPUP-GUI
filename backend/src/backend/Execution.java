@@ -470,6 +470,16 @@ public class Execution implements Engine, Serializable {
 
         return graphManager.getAllNamesOfTargets();
     }
+
+    @Override
+    public List<String> getSerialSetList() {
+        return new ArrayList<>(graphManager.getSerialSetManager().getSerialSetMap().keySet());
+    }
+
+    @Override
+    public List<String> getSerialSetTarget(String serialSetName) {
+        return graphManager.getSerialSetManager().getSerialSetMap().get(serialSetName).getTargetInSerialSet();
+    }
     //------------------------------------------------ ctor and utils ------------------------------------------------//
 
     private static class TempTarget {

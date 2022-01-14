@@ -79,10 +79,18 @@ public class GraphTableViewController {
     @FXML
     private TableColumn<GraphTargetsTypeInfoDTO, Integer> totalCol;
 
+    @FXML
+    private Button serialSetSummaryBtn;
+
     private ObservableList<InfoAboutTargetDTO> dataForTable;
 
     private ObservableList<GraphTargetsTypeInfoDTO> dataForStateTable;
 
+
+    @FXML
+    private void onSerialSetSummaryBtnClicked() {
+        appController.showSerialSetSummary();
+    }
 
     @FXML
     public void onGoToTaskViewBtnClicked() {
