@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.RowConstraints?>
@@ -28,7 +29,10 @@
             </rowConstraints>
             <children>
                 <Label alignment="CENTER" text="Where would you like to save the files?" textAlignment="CENTER" textOverrun="CENTER_ELLIPSIS" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                <Button fx:id="outputFolderBtn" mnemonicParsing="false" onAction="#onOutputFolderBtnClicked" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER" />
+                <Button fx:id="outputFolderBtn" mnemonicParsing="false" onAction="#onOutputFolderBtnClicked" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+               <tooltip>
+                  <Tooltip text="place to save file" />
+               </tooltip></Button>
                 <Label fx:id="folderNameLabel" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="1" />
                 <Label text="Name the file:" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                 <TextField fx:id="fileNameTA" onAction="#onFileNameTAClicked" onInputMethodTextChanged="#onFileNameChanged" GridPane.columnIndex="2" GridPane.rowIndex="2" />
@@ -43,11 +47,17 @@
                     <GridPane.margin>
                         <Insets left="10.0" />
                     </GridPane.margin>
+               <tooltip>
+                  <Tooltip text="copy to clipboard" />
+               </tooltip>
                 </Button>
                 <Button fx:id="copyImagePathBtn" disable="true" mnemonicParsing="false" onAction="#onCopyImagePathBtnClicked" GridPane.columnIndex="3" GridPane.rowIndex="3">
                     <GridPane.margin>
                         <Insets left="10.0" />
                     </GridPane.margin>
+               <tooltip>
+                  <Tooltip text="copy to clipboard" />
+               </tooltip>
                 </Button>
             </children>
         </GridPane>

@@ -20,9 +20,9 @@ public class SimulationTask extends Task implements Serializable {
 
     public SimulationTask(TaskArgs taskArgs, GraphManager graphManager, String pathToLogFile,
                           SerialSetManger serialSetManager, Consumer<accumulatorForWritingToFile> finishedTargetLog,
-                          Consumer<ProgressDto> finishedTarget) {
+                          Consumer<ProgressDto> finishedTarget, int maxParallelism) {
         super(false, serialSetManager, taskArgs.getNumOfThreads(), graphManager, pathToLogFile
-                , finishedTargetLog, finishedTarget);
+                , finishedTargetLog, finishedTarget, maxParallelism);
         SimulationArgs simulationArgs = (SimulationArgs) taskArgs;
         this.random = new Random();
         this.isRandom = simulationArgs.isRandom();

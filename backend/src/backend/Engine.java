@@ -50,4 +50,6 @@ public interface Engine extends Serializable {
     void pauseTask();
 
     void resumeTask();
+
+    void setNumberOfThreads(Integer value);
 }

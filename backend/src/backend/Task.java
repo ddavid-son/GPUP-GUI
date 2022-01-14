@@ -17,33 +17,46 @@ import java.util.stream.Collectors;
 
 public abstract class Task implements Serializable {
 
+    Thread mainThread;
     int numberOfThreads;
-    List<String> waitingList = new LinkedList<>();
+    int maxParallelism;
+    boolean flag = false;
     protected final String path;
     ThreadPoolExecutor threadPool;
     int numberOfFinishedTargets = 0;
     boolean allGraphHasBeenProcessed;
+    Consumer<ProgressDto> finishedTarget;
     private int numberOfThreadActive = 0;
     final SerialSetManger serialSetManger;
-    Map<String, TaskTarget> graph = new HashMap<>();
-    List<accumulatorForWritingToFile> logData = new LinkedList<>();
+    final Object monitorObj = new Object();
     BlockingQueue<Runnable> threadPoolTaskQueue;
+    List<String> waitingList = new LinkedList<>();
+    Map<String, TaskTarget> graph = new HashMap<>();
     Consumer<accumulatorForWritingToFile> finishedTargetLog;
-    Consumer<ProgressDto> finishedTarget;
-    Thread mainThread;
+    List<accumulatorForWritingToFile> logData = new LinkedList<>();
 
     public void pauseTask() {
-        mainThread.suspend();
-        threadPoolTaskQueue = threadPool.getQueue();
-        threadPool.shutdownNow();
+        flag = true;
     }
 
     public void resumeTask() {
-        threadPool = new ThreadPoolExecutor(numberOfThreads, numberOfThreads,
-                1, TimeUnit.MILLISECONDS, threadPoolTaskQueue);
-        mainThread.resume();
+        flag = false;
+        synchronized (monitorObj) {
+            monitorObj.notifyAll();
+        }
     }
 
+    private void pauseThreadTask() {
+        if (flag) {
+            synchronized (monitorObj) {
+                try {
+                    monitorObj.wait();
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     private synchronized void updateNumberOfActiveThreads(boolean isUp) {
         numberOfThreadActive = isUp ? numberOfThreadActive + 1 : numberOfThreadActive - 1;
@@ -53,12 +66,14 @@ public abstract class Task implements Serializable {
     // ---------------------------------------------- ctor and utils ------------------------------------------------ //
     public Task(boolean allGraphHasBeenProcessed, SerialSetManger serialSetManger,
                 int numberOfThreads, GraphManager graphManager, String path,
-                Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget) {
-        setConsumers(finishedTargetLog, finishedTarget);
-        this.allGraphHasBeenProcessed = allGraphHasBeenProcessed;
-        this.serialSetManger = serialSetManger;
-        this.numberOfThreads = numberOfThreads;
+                Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget,
+                int maxParallelism) {
         this.path = path;
+        this.maxParallelism = maxParallelism;
+        this.numberOfThreads = numberOfThreads;
+        this.serialSetManger = serialSetManger;
+        this.allGraphHasBeenProcessed = allGraphHasBeenProcessed;
+        setConsumers(finishedTargetLog, finishedTarget);
         buildTaskGraph(graphManager);
     }
 
@@ -89,7 +104,6 @@ public abstract class Task implements Serializable {
     }
 
     protected static boolean missedTargets(TaskTarget target) {
-
         return target.state == Target.TargetState.FROZEN;
     }
 
@@ -111,19 +125,27 @@ public abstract class Task implements Serializable {
         threadPool.setMaximumPoolSize(numberOfThreads);
     }
 
+    public void changeNumberOfThreads(int newThreadsCount) {
+        if (newThreadsCount != numberOfThreads && newThreadsCount > 0 && newThreadsCount <= maxParallelism) {
+            numberOfThreads = newThreadsCount;
+            setPoolSize();
+        }
+    }
+
     // ---------------------------------------------- ctor and utils ------------------------------------------------ //
 
 
     // --------------------------------------------------- run ------------------------------------------------------ //
     public void run(Consumer<String> print) {
+        setPoolSize();
         mainThread = Thread.currentThread();
+        accumulatorForWritingToFile resOfTargetTaskRun;
         long graphRunStartTime = System.currentTimeMillis();
         String fullPath = createDirectoryToLogData(graphRunStartTime);
-        accumulatorForWritingToFile resOfTargetTaskRun;
-        setPoolSize();
+
         while (numberOfFinishedTargets < waitingList.size()) {
             for (int i = 0; i < waitingList.size(); i++) {
-                //waitIfMaxNumberOfThreadAreAlreadyRunning();
+                pauseThreadTask();
                 TaskTarget targetToExecute = graph.get(waitingList.get(i));
                 // the order of the statements inside the if () is important - relaying on "&&" short-circuiting feature
                 // i.e. if the equals methode evaluates to false canIRun will not be called
@@ -134,33 +156,41 @@ public abstract class Task implements Serializable {
                     });
                     resOfTargetTaskRun = new accumulatorForWritingToFile();
                     accumulatorForWritingToFile finalResOfTargetTaskRun = resOfTargetTaskRun;
-                    Thread t = new Thread(() -> {
-                        updateNumberOfActiveThreads(true);
-                        runTaskOnTarget(targetToExecute, finalResOfTargetTaskRun, print);
-                        Platform.runLater(() -> {
-                            finishedTargetLog.accept(finalResOfTargetTaskRun);
-                            finishedTarget.accept(new ProgressDto(getNamesToRunLater(targetToExecute, finalResOfTargetTaskRun), targetToExecute.state));
-                        });
-                        writeTargetResultsToLogFile(finalResOfTargetTaskRun, fullPath);
-                        logData.add(finalResOfTargetTaskRun);
-                        targetSummary(finalResOfTargetTaskRun, print);
-                        serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
-                        incrementFinishedThreadsCount();
-                        updateNumberOfActiveThreads(false);
-                    }, "thread #: " + numberOfFinishedTargets);
-                    threadPool.execute(t);
+                    sendToNewThreadAndPushToPool(print, fullPath, targetToExecute, finalResOfTargetTaskRun);
                 }
             }
         }
         threadPool.shutdown();
+        printRunSummary(print, graphRunStartTime);
+        numberOfFinishedTargets = 0;
+    }
 
+    private void printRunSummary(Consumer<String> print, long graphRunStartTime) {
         long graphRunEndTime = System.currentTimeMillis();
         print.accept("Simulation finished in " +
                 (graphRunEndTime - graphRunStartTime) / 1000 +
                 "." + (graphRunEndTime - graphRunStartTime) % 1000 +
                 " s");
         simulationRunSummary(print);
-        numberOfFinishedTargets = 0;
+    }
+
+    private void sendToNewThreadAndPushToPool(Consumer<String> print, String fullPath, TaskTarget targetToExecute, accumulatorForWritingToFile finalResOfTargetTaskRun) {
+        Thread t = new Thread(() -> {
+            updateNumberOfActiveThreads(true);
+            runTaskOnTarget(targetToExecute, finalResOfTargetTaskRun, print);
+            Platform.runLater(() -> {
+                finishedTargetLog.accept(finalResOfTargetTaskRun);
+                finishedTarget.accept(new ProgressDto(getNamesToRunLater(targetToExecute, finalResOfTargetTaskRun), targetToExecute.state));
+            });
+            writeTargetResultsToLogFile(finalResOfTargetTaskRun, fullPath);
+            logData.add(finalResOfTargetTaskRun);
+            targetSummary(finalResOfTargetTaskRun, print);
+            serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
+            incrementFinishedThreadsCount();
+            updateNumberOfActiveThreads(false);
+            pauseThreadTask();
+        }, "thread #: " + numberOfFinishedTargets);
+        threadPool.execute(t);
     }
 
     private String getNamesToRunLater(TaskTarget targetToExecute, accumulatorForWritingToFile finalResOfTargetTaskRun) {

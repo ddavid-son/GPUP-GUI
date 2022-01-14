@@ -1,28 +1,45 @@
 package app.taskView;
 
 import app.mainScreen.AppController;
+import app.taskView.summaryWindow.SummaryController;
 import backend.*;
+import backend.argumentsDTO.CompilationArgs;
 import backend.argumentsDTO.ProgressDto;
+import backend.argumentsDTO.SimulationArgs;
 import backend.argumentsDTO.TaskArgs;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.geometry.HPos;
+import javafx.geometry.VPos;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 public class TaskViewController {
 
     @FXML
     private ListView<StackPane> frozenList;
+
+    @FXML
+    private GridPane userInputGridPane;
 
     @FXML
     private ListView<StackPane> waitingList;
@@ -62,6 +79,17 @@ public class TaskViewController {
 
     @FXML
     private Label isIncrementalLabel;
+
+    @FXML
+    private Button setNewThreadsBtn;
+
+    private Label srcFolderLabel;
+    private Label destFolderLabel;
+    private Label successRateLabel;
+    private Label warningRateLabel;
+    private Label sleepTimeLabel;
+    private Label isRandomLabel;
+
     private AppController appController;
     private Execution execution;
     private int totalNumberOfTargets;
@@ -86,10 +114,9 @@ public class TaskViewController {
     ObservableList<String> obsAllFinishedTasks;
 
     private boolean paused = false;
-
-    SimpleDoubleProperty progressBarProperty = new SimpleDoubleProperty(0);
-
+    private SimpleBooleanProperty runEnded = new SimpleBooleanProperty(false);
     List<String> summery = new ArrayList<>();
+    private final Random r = new Random();
 
     @FXML
     void onGoHomeBtnClicked(ActionEvent event) {
@@ -98,16 +125,20 @@ public class TaskViewController {
 
     @FXML
     void onPlayPauseBtnClicked(ActionEvent event) {
-        // replace icon to pause
         if (!paused) {
             appController.pauseExecution();
-            playPauseBtn.setGraphic(appController.getIcon("/icons/playBtnIcon.png", 40));
+            playPauseBtn.setGraphic(appController.getIcon("/icons/playBtnIcon.png", 35));
             paused = true;
         } else {
             appController.resumeExecution();
-            playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 40));
+            playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 35));
             paused = false;
         }
+    }
+
+    @FXML
+    void onSetNewThreadsBtnClicked(ActionEvent event) {
+        appController.setNumberOfThreads(numberOfThreadsSpinner.getValue());
     }
 
     public void setAppController(AppController appController, Engine execution) {
@@ -122,10 +153,8 @@ public class TaskViewController {
 
     public void setTaskView(TaskArgs taskArgs) {
         totalNumberOfTargets = taskArgs.getTargetsSelectedForGraph().size();
-
-        taskTypeHeaderLabel.setText(taskArgs.getTaskType().toString());
-        numberOfThreadsLabel.setText("Max number of threads: " + taskArgs.getNumOfThreads());
-        isIncrementalLabel.setText("Task will be performed: " + (taskArgs.isIncremental() ? "Incrementally" : "From scratch"));
+        setLabelsAccordingToUserInput(taskArgs);
+        handleListAndObservables(taskArgs);
 
         numberOfThreadsSpinner.setValueFactory(
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(
@@ -134,18 +163,62 @@ public class TaskViewController {
                         1)
         );
 
-        handelListAndObservabels();
-        playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 40));
+        playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 35));
+        playPauseBtn.setDisable(false);
 
-        taskArgs.getTargetsSelectedForGraph().forEach(target -> {
-            obsAllTargets.add(new TaskCircle(target, Target.TargetState.FROZEN).getStackPane());
-        });
-
-        obsFrozenList.addAll(obsAllTargets);
         progressBar.setProgress(0F);
     }
 
-    private void handelListAndObservabels() {
+    private void setLabelsAccordingToUserInput(TaskArgs taskArgs) {
+        taskTypeHeaderLabel.setText(taskArgs.getTaskType().toString());
+        numberOfThreadsLabel.setText("Number of threads: " + taskArgs.getNumOfThreads());
+        isIncrementalLabel.setText("Task will be performed: " + (taskArgs.isIncremental() ?
+                "Incrementally" :
+                "From scratch")
+        );
+
+        if (taskArgs.getTaskType() == TaskArgs.TaskType.COMPILATION) {
+            CompilationArgs compilationArgs = (CompilationArgs) taskArgs;
+            srcFolderLabel = new Label("Files Will Be Taken From: " + compilationArgs.getSrcPath());
+            destFolderLabel = new Label("Compiled Files Will Be Saved In: " + compilationArgs.getDstPath());
+
+            userInputGridPane.add(srcFolderLabel, 4, 0);
+            userInputGridPane.add(destFolderLabel, 4, 1);
+
+            GridPane.setValignment(srcFolderLabel, VPos.TOP);
+            GridPane.setValignment(destFolderLabel, VPos.TOP);
+            GridPane.setColumnSpan(srcFolderLabel, 6);
+            GridPane.setColumnSpan(destFolderLabel, 6);
+
+            GridPane.setHalignment(srcFolderLabel, HPos.LEFT);
+            GridPane.setHalignment(destFolderLabel, HPos.LEFT);
+        } else {
+            SimulationArgs simulationArgs = (SimulationArgs) taskArgs;
+            successRateLabel = new Label("Success Rate: " + simulationArgs.getSuccessRate());
+            warningRateLabel = new Label("Warning Rate: " + simulationArgs.getWarningRate());
+            sleepTimeLabel = new Label("Sleep Time" +
+                    (simulationArgs.isRandom() ? " <= " : ": ") +
+                    simulationArgs.getSleepTime()
+            );
+
+            userInputGridPane.add(successRateLabel, 4, 0);
+            userInputGridPane.add(warningRateLabel, 4, 1);
+            userInputGridPane.add(sleepTimeLabel, 4, 2);
+
+            GridPane.setValignment(successRateLabel, VPos.TOP);
+            GridPane.setValignment(warningRateLabel, VPos.TOP);
+            GridPane.setValignment(sleepTimeLabel, VPos.TOP);
+            GridPane.setColumnSpan(successRateLabel, 6);
+            GridPane.setColumnSpan(warningRateLabel, 6);
+            GridPane.setColumnSpan(sleepTimeLabel, 6);
+
+            GridPane.setHalignment(successRateLabel, HPos.LEFT);
+            GridPane.setHalignment(warningRateLabel, HPos.LEFT);
+            GridPane.setHalignment(sleepTimeLabel, HPos.LEFT);
+        }
+    }
+
+    private void handleListAndObservables(TaskArgs taskArgs) {
         obsAllTargets = FXCollections.observableList(allTargets);
         obsFailedList = FXCollections.observableList(failedListItems);
         obsFrozenList = FXCollections.observableList(frozenListItems);
@@ -160,11 +233,19 @@ public class TaskViewController {
         failedList.setItems(obsFailedList);
         waitingList.setItems(obsWaitingList);
         frozenList.setItems(obsFrozenList);
+
+        taskArgs.getTargetsSelectedForGraph().forEach(target -> {
+            obsAllTargets.add(new TaskCircle(target, Target.TargetState.FROZEN).getStackPane());
+        });
+
+        obsFrozenList.addAll(obsAllTargets);
     }
 
     private void handelLogOfTask(accumulatorForWritingToFile targetLog) {
+
         targetLog.outPutData.forEach(s -> {
-            logListViw.appendText(TimeUtil.ltn(System.currentTimeMillis()) + " " + s + "\n");
+            logListViw.appendText("\n" + TimeUtil.ltn(System.currentTimeMillis()) + " " + s);
+            logListViw.positionCaret(0);
         });
         logListViw.appendText("\n");
     }
@@ -233,14 +314,13 @@ public class TaskViewController {
     }
 
     private void handelListInCaseOfStart(ProgressDto targetLog, StackPane temp) {
-
         for (StackPane stackPane : obsFrozenList) {
             if (stackPane.getId().equals(targetLog.getTargetName())) {
                 temp = stackPane;
                 switch (targetLog.getTargetState()) {
                     case WAITING:
                         if (!waitingListItems.contains(temp)) {
-                            ((Circle) temp.getChildren().get(0)).fillProperty().setValue(Color.YELLOW);
+                            ((Circle) temp.getChildren().get(0)).fillProperty().setValue(Color.PINK);
                             obsWaitingList.add(temp);
                         }
                         break;
@@ -298,17 +378,51 @@ public class TaskViewController {
     public void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
         Thread thread = new Thread(() -> {
             try {
+                playPauseBtn.setDisable(false);
+                long start = System.currentTimeMillis();
                 execution.runTaskOnGraph(taskArgs, this::handelLogOfTask, this::handelFinishedTask);
+                long end = System.currentTimeMillis();
+                Platform.runLater(() -> {
+                    playPauseBtn.setDisable(true);
+                    showSummaryWindow(end - start);
+                });
             } catch (Exception e) {
                 Platform.runLater(() -> appController.handleErrors(
                         e,
-                        Arrays.toString(e.getStackTrace()),
+                        e.getMessage(),
                         "Error running task"));
             }
             // TODO: maybe down here will handle the summary data fetching with runLater to update the UI
         });
         thread.setName("Task thread");
         thread.start();
+    }
+
+    private void showSummaryWindow(long time) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource("/resources/summayWindow.fxml");
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            SummaryController summayController = fxmlLoader.getController();
+
+            summayController.setSummaryWindow(
+                    obsFailedList,
+                    obsSkippedList,
+                    obsFinishedList,
+                    taskTypeHeaderLabel.getText(),
+                    time
+            );
+
+            Stage stage = new Stage();
+            stage.setTitle("Summary");
+            stage.setScene(new Scene(root));
+            stage.setResizable(false);
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.show();
+        } catch (IOException e) {
+            //
+        }
     }
 
     public void resetAllLists(boolean isIncremental) {
@@ -338,5 +452,9 @@ public class TaskViewController {
         allFinishedTasks.clear();
         totalNumberOfTargets = obsFrozenList.size();
         progressBar.progressProperty().setValue(0);
+    }
+
+    public void disablePlayPauseBtn() {
+        playPauseBtn.setDisable(true);
     }
 }

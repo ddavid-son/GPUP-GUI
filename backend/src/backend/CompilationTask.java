@@ -18,9 +18,10 @@ public class CompilationTask extends Task {
 
 
     CompilationTask(TaskArgs taskArgs, GraphManager graphManager, String pathToLogFile, SerialSetManger serialSetManger
-            , Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget) {
+            , Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget,
+                    int maxParallelism) {
         super(false, serialSetManger, taskArgs.getNumOfThreads(), graphManager, pathToLogFile,
-                finishedTargetLog, finishedTarget);
+                finishedTargetLog, finishedTarget, maxParallelism);
         CompilationArgs compilationArgs = (CompilationArgs) taskArgs;
         this.srcFolderPath = compilationArgs.getSrcPath();
         this.dstFolderPath = compilationArgs.getDstPath();

@@ -291,7 +291,6 @@ public class TaskFormController {
         appController.runTask(simulationArgs);
         if (sideMenuController.taskType == null || !simulationArgs.isIncremental())
             sideMenuController.taskType = TaskArgs.TaskType.SIMULATION;
-        /*appController.goToTaskView(simulationArgs);*/
     }
 
     private boolean assertSimulationUserInput() {

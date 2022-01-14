@@ -207,15 +207,21 @@ public class Execution implements Engine, Serializable {
     private void createTask(TaskArgs taskArgs) {
         switch (taskArgs.getTaskType()) {
             case SIMULATION:
-                //maybe the consumer can be a thread ???
                 task = new SimulationTask(taskArgs, costumeGraphManager, workingDirectory,
-                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget);
+                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget,
+                        maxParallelism);
                 break;
             case COMPILATION:
                 task = new CompilationTask(taskArgs, costumeGraphManager, workingDirectory,
-                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget);
+                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget,
+                        maxParallelism);
                 break;
         }
+    }
+
+    public void setNumberOfThreads(Integer value) {
+        if (task != null)
+            task.changeNumberOfThreads(value);
     }
     //--------------------------------------------------- run task ---------------------------------------------------//
 

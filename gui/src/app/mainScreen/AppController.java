@@ -82,7 +82,9 @@ public class AppController {
             graphTableViewComponentController.setAllComponentsToEnabled();
             graphTableViewComponentController.loadGraphToTableView(execution.getInfoAboutAllTargets());
             graphTableViewComponentController.loadSummaryToTableView(execution.getGraphInfo());
-            mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+            if (mainScreen == null) {
+                mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+            }
             activeFile = selectedFile;
         } catch (IllegalArgumentException e) {
             handleErrors(
@@ -268,8 +270,6 @@ public class AppController {
 
     //----------------------------------------------- task view ----------------------------------------------------- //
     public void goToTaskView(TaskArgs taskArgs) {
-        if (taskViewScreen == null)
-            this.mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
         if (!taskArgs.isIncremental())
             createNewTaskController(taskArgs);
         // replace the center of the main screen with the task view
@@ -312,11 +312,14 @@ public class AppController {
 
     public void resumeExecution() {
         execution.resumeTask();
-
     }
 
     public void pauseExecution() {
         execution.pauseTask();
+    }
+
+    public void setNumberOfThreads(Integer value) {
+        execution.setNumberOfThreads(value);
     }
     //----------------------------------------------- task view ----------------------------------------------------- //
 }
