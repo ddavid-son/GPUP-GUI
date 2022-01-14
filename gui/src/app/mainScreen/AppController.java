@@ -27,8 +27,7 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.awt.*;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -87,6 +86,7 @@ public class AppController {
             if (mainScreen == null) {
                 mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
             }
+            serialSetScreen = null;
             activeFile = selectedFile;
         } catch (IllegalArgumentException e) {
             handleErrors(
@@ -246,11 +246,44 @@ public class AppController {
     }
 
     public void openFile(String imagePath) {
+
+        BorderPane root = new BorderPane();
+        try {
+            InputStream stream = new FileInputStream(imagePath);
+            Image image = new Image(stream);
+            ImageView imageView = new ImageView();
+            imageView.minHeight(500);
+            imageView.minWidth(500);
+            imageView.fitHeightProperty().bind(root.heightProperty());
+            imageView.fitWidthProperty().bind(root.widthProperty());
+            imageView.setImage(image);
+            root.setCenter(imageView);
+            root.setMinSize(500, 500);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        ScrollPane parent = new ScrollPane();
+        parent.setContent(root);
+        parent.setFitToHeight(true);
+        parent.setFitToWidth(true);
+        parent.setMinWidth(500);
+        parent.setMinHeight(500);
+
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("display image");
+        stage.setScene(new Scene(root));
+        stage.show();
+
         try {
             Desktop.getDesktop().open(new File(imagePath));
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
+        // open window with image imagePath
+
+
     }
 
 
@@ -333,7 +366,5 @@ public class AppController {
     public void setNumberOfThreads(Integer value) {
         execution.setNumberOfThreads(value);
     }
-
-
     //----------------------------------------------- task view ----------------------------------------------------- //
 }

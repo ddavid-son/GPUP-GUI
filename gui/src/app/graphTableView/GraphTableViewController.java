@@ -109,6 +109,7 @@ public class GraphTableViewController {
     public void setAllComponentsToEnabled() {
         graphTable.setDisable(false);
         stateTable.setDisable(false);
+        serialSetSummaryBtn.setDisable(false);
     }
 
     public void loadGraphToTableView(List<InfoAboutTargetDTO> allTargets) {
