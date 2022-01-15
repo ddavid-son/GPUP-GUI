@@ -19,6 +19,10 @@ public class accumulatorForWritingToFile implements Serializable {
     public accumulatorForWritingToFile() {
     }
 
+    public accumulatorForWritingToFile(String data) {
+        outPutData.add(data);
+    }
+
 
     @Override
     public String toString() {
