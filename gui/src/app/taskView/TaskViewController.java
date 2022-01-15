@@ -22,6 +22,7 @@ import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
@@ -32,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class TaskViewController {
 
@@ -164,7 +166,6 @@ public class TaskViewController {
         );
 
         playPauseBtn.setGraphic(appController.getIcon("/icons/pauseBtnIcon.png", 35));
-        playPauseBtn.setDisable(false);
 
         progressBar.setProgress(0F);
     }
@@ -238,7 +239,92 @@ public class TaskViewController {
             obsAllTargets.add(new TaskCircle(target, Target.TargetState.FROZEN).getStackPane());
         });
 
+        for (StackPane target : obsAllTargets) {
+            ((Button) target.getChildren().get(2)).onActionProperty().setValue(event -> {
+                getInfoAboutTargetInExecution(target);
+            });
+        }
+
         obsFrozenList.addAll(obsAllTargets);
+    }
+
+    private void getInfoAboutTargetInExecution(StackPane target) {
+        new Thread(() -> {
+            publishToUser(
+                    execution.getInfoAboutTargetInExecution(
+                            target.getId(),
+                            cts(((Circle) target.getChildren().get(0)).getFill())
+                    ));
+            System.out.println("Target " + target.getId() + " was clicked");
+        }).start();
+    }
+
+    private void publishToUser(List<String> message) {
+
+        Platform.runLater(() -> {
+            logListViw.appendText("\n************* info about target " + message.get(0) + " *************\n");
+            logListViw.appendText("Target Type is: " + message.get(1) + "\n");
+            logListViw.appendText("Target participates in serial sets: " + message.get(2) + "\n");
+            logListViw.appendText("Target is in state: " + message.get(3) + "\n");
+            getExtraDataAccordingToState(message.get(3), message.get(4));
+        });
+    }
+
+    private void getExtraDataAccordingToState(String targetState, String message) {
+
+        switch (targetState) {
+            case "WAITING":
+                logListViw.appendText("Target is waiting for: " + message + "ms\n");
+                break;
+            case "IN_PROCESS":
+                logListViw.appendText("Target is in process for: " + message + "\n");
+                break;
+            case "FAILURE":
+            case "SUCCESS":
+            case "WARNING":
+                logListViw.appendText("Target result: " + targetState + "\n");
+                break;
+            case "SKIPPED":
+                logListViw.appendText("Target skipped because of: " +
+                        Arrays.stream(message.split(",")).filter(target ->
+                                checkIfTargetIsInList(target, obsSkippedList) ||
+                                        checkIfTargetIsInList(target, obsFailedList)).collect(Collectors.toList()) + "\n");
+                break;
+            case "FROZEN":
+                logListViw.appendText("Target is waiting for: " +
+                        Arrays.stream(message.split(","))
+                                .filter(target ->
+                                        checkIfTargetIsInList(target, obsWaitingList) ||
+                                                checkIfTargetIsInList(target, obsInProcessList) ||
+                                                checkIfTargetIsInList(target, obsFrozenList))
+                                .collect(Collectors.toList()) + "\n");
+                break;
+
+        }
+        logListViw.appendText("****************************************************\n\n");
+    }
+
+    private boolean checkIfTargetIsInList(String target, ObservableList<StackPane> list) {
+        return list.stream().anyMatch(t -> t.getId().equals(target));
+    }
+
+    private Target.TargetState cts(Paint paint) {
+
+        if (paint.equals(Color.RED)) {
+            return Target.TargetState.FAILURE;
+        } else if (paint.equals(Color.BLUE)) {
+            return Target.TargetState.FROZEN;
+        } else if (paint.equals(Color.GREEN)) {
+            return Target.TargetState.SUCCESS;
+        } else if (paint.equals(Color.YELLOW)) {
+            return Target.TargetState.WARNING;
+        } else if (paint.equals(Color.PINK)) {
+            return Target.TargetState.WAITING;
+        } else if (paint.equals(Color.ORANGE)) {
+            return Target.TargetState.IN_PROCESS;
+        } else {
+            return Target.TargetState.SKIPPED;
+        }
     }
 
     private void handelLogOfTask(accumulatorForWritingToFile targetLog) {
@@ -252,6 +338,8 @@ public class TaskViewController {
 
     private void handelFinishedTask(ProgressDto progressDto) {
         updateProgressBar(progressDto);
+        if (playPauseBtn.isDisable())
+            playPauseBtn.setDisable(false);
         if (progressDto.getTargetState() == Target.TargetState.FAILURE)
             handelFailedAndSkipped(progressDto.getTargetName());
         else if (progressDto.getTargetState() == Target.TargetState.SUCCESS ||
@@ -401,7 +489,7 @@ public class TaskViewController {
     private void showSummaryWindow(long time) {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("/resources/summayWindow.fxml");
+            URL url = getClass().getResource("/resources/fxml/summayWindow.fxml");
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load(url.openStream());
             SummaryController summayController = fxmlLoader.getController();
@@ -413,6 +501,9 @@ public class TaskViewController {
                     taskTypeHeaderLabel.getText(),
                     time
             );
+
+            root.getStylesheets().clear();
+            root.getStylesheets().add(appController.themeCSSPath);
 
             Stage stage = new Stage();
             stage.setTitle("Summary");

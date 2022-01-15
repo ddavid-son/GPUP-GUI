@@ -61,7 +61,7 @@ public class FindAllPathsController {
 
     private void setSrcComboBoxListener(Engine execution) {
         srcComboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
-            if (!newValue.equals(oldValue) && !newValue.isEmpty()) {
+            if (newValue != null && !newValue.equals(oldValue) && !newValue.isEmpty()) {
                 try {
                     Set<List<String>> allPaths = execution.findAllPathsBetweenTargets(newValue, dstComboBox.getValue());
                     List<String> res = allPaths.stream()
@@ -77,7 +77,7 @@ public class FindAllPathsController {
 
     private void setDstComboBoxListener(Engine execution) {
         dstComboBox.getSelectionModel().selectedItemProperty().addListener((options, oldValue, newValue) -> {
-            if (!newValue.equals(oldValue) && !newValue.isEmpty()) {
+            if (newValue != null && !newValue.equals(oldValue) && !newValue.isEmpty()) {
                 try {
                     Set<List<String>> allPaths = execution.findAllPathsBetweenTargets(srcComboBox.getValue(), newValue);
                     List<String> res = allPaths.stream()

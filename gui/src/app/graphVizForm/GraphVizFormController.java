@@ -5,13 +5,23 @@ import backend.Engine;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.InputMethodEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.DirectoryChooser;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 
 public class GraphVizFormController {
     public Button runGraphVizBtn;
@@ -38,6 +48,9 @@ public class GraphVizFormController {
 
     @FXML
     private Button copyTextFilePathBtn;
+
+    @FXML
+    private Button displayInApp;
 
     @FXML
     private Button copyImagePathBtn;
@@ -68,6 +81,40 @@ public class GraphVizFormController {
             );
         }
     }
+
+
+    @FXML
+    void onDisplayInApp(ActionEvent event) {
+        onInnerDisplayBtnClicked(imagePathTF.getText());
+    }
+
+    private void onInnerDisplayBtnClicked(String imagePath) {
+        BorderPane root = new BorderPane();
+        try {
+            InputStream stream = new FileInputStream(imagePath);
+            Image image = new Image(stream);
+            ImageView imageView = new ImageView();
+            imageView.minHeight(500);
+            imageView.minWidth(500);
+            imageView.fitHeightProperty().bind(root.heightProperty());
+            imageView.fitWidthProperty().bind(root.widthProperty());
+            imageView.setImage(image);
+            imageView.setPreserveRatio(false);
+            root.setCenter(imageView);
+            root.setMinSize(500, 500);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        ScrollPane parent = new ScrollPane();
+        parent.setContent(root);
+        Stage stage = new Stage();
+        stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("display image");
+        stage.setScene(new Scene(root));
+        stage.show();
+    }
+
 
     @FXML
     void onFileNameTAClicked(ActionEvent event) {
@@ -110,6 +157,7 @@ public class GraphVizFormController {
         copyTextFilePathBtn.setDisable(disable);
         copyImagePathBtn.setDisable(disable);
         displayImageBtn.setDisable(disable);
+        displayInApp.setDisable(disable);
     }
 
     @FXML

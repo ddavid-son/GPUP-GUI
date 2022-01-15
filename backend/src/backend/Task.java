@@ -18,8 +18,8 @@ import java.util.stream.Collectors;
 public abstract class Task implements Serializable {
 
     Thread mainThread;
-    int numberOfThreads;
     int maxParallelism;
+    int numberOfThreads;
     boolean flag = false;
     protected final String path;
     ThreadPoolExecutor threadPool;
@@ -52,7 +52,7 @@ public abstract class Task implements Serializable {
                 try {
                     monitorObj.wait();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    //e.printStackTrace();
                 }
             }
         }
@@ -60,7 +60,6 @@ public abstract class Task implements Serializable {
 
     private synchronized void updateNumberOfActiveThreads(boolean isUp) {
         numberOfThreadActive = isUp ? numberOfThreadActive + 1 : numberOfThreadActive - 1;
-        System.out.println("-----------*******number of active threads: " + numberOfThreadActive);
     }
 
     // ---------------------------------------------- ctor and utils ------------------------------------------------ //
@@ -85,7 +84,7 @@ public abstract class Task implements Serializable {
                     finishedTarget.accept(new ProgressDto(target.getName(), target.getState()));
                 });
             }
-            waitForRunLater();
+            //waitForRunLater();
             graph.put(target.getName(), taskTarget);
         }
     }
@@ -151,6 +150,7 @@ public abstract class Task implements Serializable {
                 // i.e. if the equals methode evaluates to false canIRun will not be called
                 if (targetToExecute.state.equals(Target.TargetState.WAITING) && serialSetManger.canIRun(targetToExecute.name)) {
                     targetToExecute.state = Target.TargetState.IN_PROCESS;
+                    targetToExecute.enterProcess = System.currentTimeMillis();
                     Platform.runLater(() -> {
                         finishedTarget.accept(new ProgressDto(targetToExecute.name, Target.TargetState.IN_PROCESS));
                     });
@@ -165,6 +165,30 @@ public abstract class Task implements Serializable {
         numberOfFinishedTargets = 0;
     }
 
+    public long getWaitingStartTime(String targetName) {
+        return graph.get(targetName).enterWaiting;
+    }
+
+    public long getProcessStartTime(String targetName) {
+        return graph.get(targetName).enterProcess;
+    }
+
+    public List<String> getFailedOrSkipped(String targetName) {
+        return graph.get(targetName).nameOfFailedOrSkippedDependencies;
+    }
+
+    public ProgressDto getInfoAboutTargetInExecution(String targetName) {
+        return new ProgressDto(
+                "",
+                graph.get(targetName).name,
+                graph.get(targetName).state,
+                graph.get(targetName).enterWaiting,
+                graph.get(targetName).enterProcess,
+                String.join(",", graph.get(targetName).nameOfFailedOrSkippedDependencies),
+                String.join(",", graph.get(targetName).dependsOn)
+        );
+    }
+
     private void printRunSummary(Consumer<String> print, long graphRunStartTime) {
         long graphRunEndTime = System.currentTimeMillis();
         print.accept("Simulation finished in " +
@@ -176,6 +200,7 @@ public abstract class Task implements Serializable {
 
     private void sendToNewThreadAndPushToPool(Consumer<String> print, String fullPath, TaskTarget targetToExecute, accumulatorForWritingToFile finalResOfTargetTaskRun) {
         Thread t = new Thread(() -> {
+            pauseThreadTask();
             updateNumberOfActiveThreads(true);
             runTaskOnTarget(targetToExecute, finalResOfTargetTaskRun, print);
             Platform.runLater(() -> {
@@ -188,15 +213,11 @@ public abstract class Task implements Serializable {
             serialSetManger.finishRunning(targetToExecute.name); // this is a synchronized method
             incrementFinishedThreadsCount();
             updateNumberOfActiveThreads(false);
-            pauseThreadTask();
         }, "thread #: " + numberOfFinishedTargets);
         threadPool.execute(t);
     }
 
     private String getNamesToRunLater(TaskTarget targetToExecute, accumulatorForWritingToFile finalResOfTargetTaskRun) {
-        /*            case SUCCESS:
-            case WARNING:
-                return targetToExecute.name + "," + String.join(",", finalResOfTargetTaskRun.targetOpened);*/
         if (targetToExecute.state == Target.TargetState.FAILURE) {
             return targetToExecute.name + "," + String.join(",", finalResOfTargetTaskRun.SkippedTargets);
         }
@@ -417,6 +438,8 @@ public abstract class Task implements Serializable {
         protected List<String> requiredFor;
         protected final List<String> nameOfFailedOrSkippedDependencies = new ArrayList<>();
         protected final List<String> serialSetsName = new ArrayList<>();
+        protected long enterWaiting = 0;
+        protected long enterProcess = 0;
 
         //ctor
         public TaskTarget(Target target) {
@@ -426,6 +449,7 @@ public abstract class Task implements Serializable {
             if (type == Target.TargetType.INDEPENDENT || type == Target.TargetType.LEAF) {
                 state = Target.TargetState.WAITING;
                 waitingList.add(name);
+                enterWaiting = System.currentTimeMillis();
             } else {
                 this.state = Target.TargetState.FROZEN;
             }

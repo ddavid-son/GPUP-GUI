@@ -480,6 +480,35 @@ public class Execution implements Engine, Serializable {
     public List<String> getSerialSetTarget(String serialSetName) {
         return graphManager.getSerialSetManager().getSerialSetMap().get(serialSetName).getTargetInSerialSet();
     }
+
+    @Override
+    public List<String> getInfoAboutTargetInExecution(String targetName, Target.TargetState targetState) {
+        List<String> info = new ArrayList<>();
+        info.add(targetName);//0
+        info.add(costumeGraphManager.getTypeOf(targetName).toString());//1
+        info.add(String.join(",", graphManager.getTargetSerialSets(targetName)));//2
+        info.add(targetState.toString());//3
+        switch (targetState) {
+            case WAITING:
+                long waiting = System.currentTimeMillis() - task.getWaitingStartTime(targetName);
+                info.add(TimeUtil.ltd(waiting));
+                break;
+            case IN_PROCESS:
+                long processing = System.currentTimeMillis() - task.getProcessStartTime(targetName);
+                info.add(TimeUtil.ltd(processing));
+                break;
+            case SKIPPED:
+            case FROZEN:
+                info.add(String.join(",", costumeGraphManager.getDependsOnOfByName(targetName)));
+                break;
+            case SUCCESS:
+            case WARNING:
+            case FAILURE:
+                info.add(targetState.toString());
+                break;
+        }
+        return info;
+    }
     //------------------------------------------------ ctor and utils ------------------------------------------------//
 
     private static class TempTarget {

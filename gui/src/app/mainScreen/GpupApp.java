@@ -10,7 +10,7 @@ import java.net.URL;
 
 public class GpupApp extends Application {
 
-    private final String APP_FXML_INCLUDE_RESOURCE = "/resources/mainScreen.fxml";
+    private final String APP_FXML_INCLUDE_RESOURCE = "/resources/fxml/mainScreen.fxml";
 
     @Override
     public void start(Stage primaryStage) throws Exception {
@@ -20,7 +20,6 @@ public class GpupApp extends Application {
         URL url = getClass().getResource(APP_FXML_INCLUDE_RESOURCE);
         fxmlLoader.setLocation(url);
         Parent root = fxmlLoader.load(url.openStream());
-
         Scene scene = new Scene(root);
         primaryStage.setScene(scene);
         primaryStage.show();

@@ -27,7 +27,8 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 import java.awt.*;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -49,18 +50,29 @@ public class AppController {
     BorderPane mainScreen;
     ScrollPane taskViewScreen;
 
-    //@FXML
-    //private TaskViewController taskViewController;
+    public String theme = "theme1";
+    public String themeCSSPath = "/resources/css/theme1.css";
 
     public List<String> targetFromPreviousRun;
 
 
     private final Engine execution = new Execution();
-    private final String FIND_ALL_PATHS_FXML_FILE = "/resources/findAllPaths.fxml";
-    private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/circleDisplay.fxml";
+    private final String FIND_ALL_PATHS_FXML_FILE = "/resources/fxml/findAllPaths.fxml";
+    private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/fxml/circleDisplay.fxml";
 
     private File activeFile;
     private ScrollPane serialSetScreen;
+
+    public void setThemeCSSPath(String themeCSSPath) {
+        this.themeCSSPath = themeCSSPath;
+        sideMenuComponentController.setThemeCSSPath(themeCSSPath);
+        graphTableViewComponentController.setThemeCSSPath(themeCSSPath);
+
+        // set new css to this scene
+        graphTableViewComponent.getScene().getStylesheets().clear();
+        graphTableViewComponent.getScene().getStylesheets().add(themeCSSPath);
+
+    }
 
     @FXML
     public void initialize() {
@@ -122,6 +134,7 @@ public class AppController {
             FindAllPathsController PathFindPopUpWindow = fxmlLoader.getController();
             PathFindPopUpWindow.setAppController(this);
 
+            root.getStylesheets().add(themeCSSPath);
             PathFindPopUpWindow.loadComboBoxes(execution.getAllTargetNames(), execution);
 
             Stage stage = new Stage();
@@ -143,7 +156,9 @@ public class AppController {
             CircleDisplayController circleDisplay = fxmlLoader.getController();
             circleDisplay.setAppController(this);
 
+            root.getStylesheets().add(themeCSSPath);
             circleDisplay.displayCircles(execution.getAllTargetNames(), execution);
+
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -171,13 +186,14 @@ public class AppController {
     public void displayRelated() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("/resources/relatedView.fxml");
+            URL url = getClass().getResource("/resources/fxml/relatedView.fxml");
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load(url.openStream());
             RelatedViewController relatedViewController = fxmlLoader.getController();
             relatedViewController.setAppController(this, execution);
 
             relatedViewController.loadTargetList();
+            root.getStylesheets().add(themeCSSPath);
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -187,8 +203,6 @@ public class AppController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public boolean taskHasTargetsSelected() {
@@ -246,46 +260,12 @@ public class AppController {
     }
 
     public void openFile(String imagePath) {
-
-        BorderPane root = new BorderPane();
-        try {
-            InputStream stream = new FileInputStream(imagePath);
-            Image image = new Image(stream);
-            ImageView imageView = new ImageView();
-            imageView.minHeight(500);
-            imageView.minWidth(500);
-            imageView.fitHeightProperty().bind(root.heightProperty());
-            imageView.fitWidthProperty().bind(root.widthProperty());
-            imageView.setImage(image);
-            root.setCenter(imageView);
-            root.setMinSize(500, 500);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        ScrollPane parent = new ScrollPane();
-        parent.setContent(root);
-        parent.setFitToHeight(true);
-        parent.setFitToWidth(true);
-        parent.setMinWidth(500);
-        parent.setMinHeight(500);
-
-        Stage stage = new Stage();
-        stage.initModality(Modality.APPLICATION_MODAL);
-        stage.setTitle("display image");
-        stage.setScene(new Scene(root));
-        stage.show();
-
         try {
             Desktop.getDesktop().open(new File(imagePath));
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage());
         }
-        // open window with image imagePath
-
-
     }
-
 
     //----------------------------------------------- task view ----------------------------------------------------- //
     public void goToTaskView(TaskArgs taskArgs) {
@@ -303,12 +283,13 @@ public class AppController {
 
     private void createNewTaskController(TaskArgs taskArgs) {
         try {
-            URL url = getClass().getResource("/resources/TaskView.fxml");
+            URL url = getClass().getResource("/resources/fxml/TaskView.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader(url);
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load();
             taskViewController = fxmlLoader.getController();
 
+            root.getStylesheets().add(themeCSSPath);
             taskViewController.setAppController(this, execution);
             taskViewController.setTaskView(taskArgs);
             this.taskViewScreen = (ScrollPane) root;
@@ -328,12 +309,13 @@ public class AppController {
 
     private void createSerialSet() {
         try {
-            URL url = getClass().getResource("/resources/serialSetView.fxml");
+            URL url = getClass().getResource("/resources/fxml/serialSetView.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader(url);
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load();
             SerialSetController serialSetController = fxmlLoader.getController();
 
+            root.getStylesheets().add(themeCSSPath);
             serialSetController.setAppController(this, execution);
             serialSetController.setSerialSet();
 

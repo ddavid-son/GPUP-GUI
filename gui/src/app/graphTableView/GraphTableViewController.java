@@ -189,4 +189,9 @@ public class GraphTableViewController {
                 .map(InfoAboutTargetDTO::getTargetName)
                 .collect(Collectors.toList());
     }
+
+    public void setThemeCSSPath(String themeCSSPath) {
+        this.graphTable.getScene().getStylesheets().clear();
+        this.graphTable.getScene().getStylesheets().add(themeCSSPath);
+    }
 }

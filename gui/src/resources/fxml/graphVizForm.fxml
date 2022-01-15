@@ -38,7 +38,7 @@
                 <TextField fx:id="fileNameTA" onAction="#onFileNameTAClicked" onInputMethodTextChanged="#onFileNameChanged" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                 <Label fx:id="fileNameLabel" GridPane.columnIndex="3" GridPane.halignment="CENTER" GridPane.rowIndex="2" />
                 <Button fx:id="runGraphVizBtn" mnemonicParsing="false" onAction="#onRunGraphVizBtnClicked" text="Run GraphViz" GridPane.columnIndex="2" GridPane.halignment="CENTER" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
-                <Button fx:id="displayImageBtn" disable="true" mnemonicParsing="false" onAction="#onDisplayImageBtnClicked" text="Display Image" GridPane.columnIndex="3" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
+                <Button fx:id="displayImageBtn" disable="true" mnemonicParsing="false" onAction="#onDisplayImageBtnClicked" text="Display on OS Image Viewer" GridPane.columnIndex="3" GridPane.halignment="RIGHT" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
                 <TextField fx:id="dotFilePathTF" editable="false" GridPane.columnIndex="2" GridPane.rowIndex="3" GridPane.valignment="TOP" />
                 <TextField fx:id="imagePathTF" editable="false" GridPane.columnIndex="2" GridPane.rowIndex="3" />
                 <Label text="Path to text file" GridPane.columnIndex="1" GridPane.rowIndex="3" GridPane.valignment="TOP" />
@@ -59,6 +59,7 @@
                   <Tooltip text="copy to clipboard" />
                </tooltip>
                 </Button>
+            <Button fx:id="displayInApp" disable="true" mnemonicParsing="false" onAction="#onDisplayInApp" text="Display in app" textAlignment="CENTER" wrapText="true" GridPane.columnIndex="1" GridPane.halignment="LEFT" GridPane.rowIndex="3" GridPane.valignment="BOTTOM" />
             </children>
         </GridPane>
     </content>

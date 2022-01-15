@@ -13,47 +13,46 @@ import java.util.function.Consumer;
 
 
 public interface Engine extends Serializable {
+    void pauseTask();
 
-    void writeObjectToFile(String path);
+    void resumeTask();
 
-    GraphTargetsTypeInfoDTO getGraphInfo();
-
-    void readObjectFromFile(String filePath);
-
-    //void makeGraphUsingGraphViz();
-
-    void makeGraphUsingGraphViz(String outPutPath, String filesNames);
-
-    void xmlFileLoadingHandler(String xmlFilePath);
-
-    List<String> findIfTargetIsInACircle(String targetName);
-
-    InfoAboutTargetDTO getInfoAboutTarget(String targetName);
-
-    Set<List<String>> findAllPathsBetweenTargets(String start, String end);
-
-    List<InfoAboutTargetDTO> getInfoAboutAllTargets();
-
-    WhatIfDTO getWhatIf(String targetName, GraphManager.RelationType type);
-
-    void runTaskOnGraph(TaskArgs taskArgs, Consumer<accumulatorForWritingToFile> finishedTargetLog,
-                        Consumer<ProgressDto> finishedTarget);
+    int getMaxThreadCount();
 
     boolean isGraphAccessible();
 
     boolean incrementalAvailable();
 
+    List<String> getSerialSetList();
+
     List<String> getAllTargetNames();
 
-    int getMaxThreadCount();
-
-    void pauseTask();
-
-    void resumeTask();
+    void writeObjectToFile(String path);
 
     void setNumberOfThreads(Integer value);
 
-    List<String> getSerialSetList();
+    GraphTargetsTypeInfoDTO getGraphInfo();
+
+    void readObjectFromFile(String filePath);
+
+    void xmlFileLoadingHandler(String xmlFilePath);
+
+    List<InfoAboutTargetDTO> getInfoAboutAllTargets();
 
     List<String> getSerialSetTarget(String serialSetName);
+
+    List<String> findIfTargetIsInACircle(String targetName);
+
+    InfoAboutTargetDTO getInfoAboutTarget(String targetName);
+
+    void makeGraphUsingGraphViz(String outPutPath, String filesNames);
+
+    Set<List<String>> findAllPathsBetweenTargets(String start, String end);
+
+    WhatIfDTO getWhatIf(String targetName, GraphManager.RelationType type);
+
+    List<String> getInfoAboutTargetInExecution(String targetName, Target.TargetState targetState);
+
+    void runTaskOnGraph(TaskArgs taskArgs, Consumer<accumulatorForWritingToFile> finishedTargetLog,
+                        Consumer<ProgressDto> finishedTarget);
 }
