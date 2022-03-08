@@ -42,6 +42,10 @@ public class SerialSetManger {
         return false;
     }
 
+    public final Map<String, SerialSet> getSerialSetMap() {
+        return ssName2serialSet;
+    }
+
     private void blockAllMySerialSets(String targetName) {
         target2SerialSetNames.get(targetName).forEach(ssName ->
                 ssName2serialSet.get(ssName).setState(targetName, SerialSet.SerialSetState.BLOCKED));

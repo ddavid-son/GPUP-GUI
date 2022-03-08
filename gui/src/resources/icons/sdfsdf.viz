@@ -1,0 +1,13 @@
+digraph G {
+ZOO -> DOO,BOO;
+POO -> MOO;
+NOO -> FOO;
+LOO -> GOO,KOO;
+KOO;
+GOO -> MOO,BOO;
+DOO -> FOO,BOO;
+MOO;
+FOO -> BOO;
+BOO;
+
+}

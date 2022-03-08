@@ -18,9 +18,10 @@ public class CompilationTask extends Task {
 
 
     CompilationTask(TaskArgs taskArgs, GraphManager graphManager, String pathToLogFile, SerialSetManger serialSetManger
-            , Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget) {
+            , Consumer<accumulatorForWritingToFile> finishedTargetLog, Consumer<ProgressDto> finishedTarget,
+                    int maxParallelism) {
         super(false, serialSetManger, taskArgs.getNumOfThreads(), graphManager, pathToLogFile,
-                finishedTargetLog, finishedTarget);
+                finishedTargetLog, finishedTarget, maxParallelism);
         CompilationArgs compilationArgs = (CompilationArgs) taskArgs;
         this.srcFolderPath = compilationArgs.getSrcPath();
         this.dstFolderPath = compilationArgs.getDstPath();
@@ -70,6 +71,7 @@ public class CompilationTask extends Task {
 
         resOfTargetTaskRun.totalTimeToRun = resOfTargetTaskRun.endTime - resOfTargetTaskRun.startTime;
         resOfTargetTaskRun.outPutData.add("* Task working on target: " + targetToExecute.name);
+        resOfTargetTaskRun.outPutData.add("* Task was ran by thread: " + Thread.currentThread().getName());
         resOfTargetTaskRun.outPutData.add("* Task started compiling: " + ts.toString().substring(10));
         resOfTargetTaskRun.outPutData.add("* File being compiled: " + targetToExecute.userData);
         resOfTargetTaskRun.outPutData.add("* The command used to compile: " + fullCommand);

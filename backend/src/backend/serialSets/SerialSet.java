@@ -16,6 +16,11 @@ public class SerialSet {
         this.activeTarget = "";
     }
 
+    public final List<String> getTargetInSerialSet() {
+
+        return targetInSerialSet;
+    }
+
     public boolean canIRun(String target) {
         return !(targetInSerialSet.contains(target) && state == SerialSetState.BLOCKED);
     }

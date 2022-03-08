@@ -2,6 +2,7 @@ package app.sideMenu;
 
 import app.graphVizForm.GraphVizFormController;
 import app.mainScreen.AppController;
+import app.settings.SettingsController;
 import app.taskForm.TaskFormController;
 import backend.Engine;
 import backend.argumentsDTO.TaskArgs;
@@ -43,8 +44,8 @@ public class SideMenuController {
     @FXML
     private Button settingBtn;
 
-    private final String TASK_FORM_FXML = "/resources/TaskForm.fxml";
-    private final String GRAPH_VIZ_FORM = "/resources/graphVizForm.fxml";
+    private final String TASK_FORM_FXML = "/resources/fxml/TaskForm.fxml";
+    private final String GRAPH_VIZ_FORM = "/resources/fxml/graphVizForm.fxml";
 
     private Engine execution;
     public TaskArgs.TaskType taskType;
@@ -63,6 +64,18 @@ public class SideMenuController {
             appController.loadXML(selectedFile);
         }
         execution = appController.getExecution();
+    }
+
+    public String setCssAccordingToTheme() {
+        switch (appController.theme) {
+            case "theme1":
+                return getClass().getResource("/resources/css/theme1.css").toExternalForm();
+            case "theme2":
+                return getClass().getResource("/resources/css/theme2.css").toExternalForm();
+            case "theme3":
+                return getClass().getResource("/resources/css/dTheme.css").toExternalForm();
+        }
+        return getClass().getResource("/resources/css/theme1.css").toExternalForm();
     }
 
     @FXML
@@ -95,6 +108,7 @@ public class SideMenuController {
             Parent root = fxmlLoader.load(url.openStream());
             TaskFormController taskFormController = fxmlLoader.getController();
 
+            root.getStylesheets().add(appController.themeCSSPath);
             taskFormController.setAppController(appController, this);
             taskFormController.setTaskController(
                     execution.getMaxThreadCount(),
@@ -150,6 +164,25 @@ public class SideMenuController {
 
     @FXML
     private void OnSettingBtnClicked(ActionEvent event) {
+        try {
+            FXMLLoader fxmlLoader = new FXMLLoader();
+            URL url = getClass().getResource("/resources/fxml/settingScreen.fxml");
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load(url.openStream());
+            SettingsController settingScreenController = fxmlLoader.getController();
+
+            settingScreenController.setAppController(appController);
+            root.getStylesheets().add(appController.themeCSSPath);
+
+            Stage stage = new Stage();
+            stage.initModality(Modality.APPLICATION_MODAL);
+            stage.setTitle("Setting Form");
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void setNewFileForTask() {
@@ -166,10 +199,9 @@ public class SideMenuController {
             Parent root = fxmlLoader.load(url.openStream());
             GraphVizFormController graphVizFormController = fxmlLoader.getController();
 
+            root.getStylesheets().add(appController.themeCSSPath);
             graphVizFormController.setAppController(appController, execution);
-            graphVizFormController.setGraphVizController(
-
-            );
+            graphVizFormController.setGraphVizController();
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -180,7 +212,12 @@ public class SideMenuController {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
 
-        //execution.makeGraphUsingGraphViz();
+    public void setThemeCSSPath(String themeCSSPath) {
+        settingBtn.getScene().getStylesheets().clear();
+        settingBtn.getScene().getStylesheets().add(themeCSSPath);
     }
 }
+
+

@@ -79,10 +79,18 @@ public class GraphTableViewController {
     @FXML
     private TableColumn<GraphTargetsTypeInfoDTO, Integer> totalCol;
 
+    @FXML
+    private Button serialSetSummaryBtn;
+
     private ObservableList<InfoAboutTargetDTO> dataForTable;
 
     private ObservableList<GraphTargetsTypeInfoDTO> dataForStateTable;
 
+
+    @FXML
+    private void onSerialSetSummaryBtnClicked() {
+        appController.showSerialSetSummary();
+    }
 
     @FXML
     public void onGoToTaskViewBtnClicked() {
@@ -101,6 +109,7 @@ public class GraphTableViewController {
     public void setAllComponentsToEnabled() {
         graphTable.setDisable(false);
         stateTable.setDisable(false);
+        serialSetSummaryBtn.setDisable(false);
     }
 
     public void loadGraphToTableView(List<InfoAboutTargetDTO> allTargets) {
@@ -179,5 +188,10 @@ public class GraphTableViewController {
                 .filter(InfoAboutTargetDTO::getIsSelected)
                 .map(InfoAboutTargetDTO::getTargetName)
                 .collect(Collectors.toList());
+    }
+
+    public void setThemeCSSPath(String themeCSSPath) {
+        this.graphTable.getScene().getStylesheets().clear();
+        this.graphTable.getScene().getStylesheets().add(themeCSSPath);
     }
 }

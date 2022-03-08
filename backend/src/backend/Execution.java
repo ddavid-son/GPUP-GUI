@@ -192,18 +192,36 @@ public class Execution implements Engine, Serializable {
         task.run(System.out::println);
     }
 
+    @Override
+    public void pauseTask() {
+        if (task != null)
+            task.pauseTask();
+    }
+
+    @Override
+    public void resumeTask() {
+        if (task != null)
+            task.resumeTask();
+    }
+
     private void createTask(TaskArgs taskArgs) {
         switch (taskArgs.getTaskType()) {
             case SIMULATION:
-                //maybe the consumer can be a thread ???
                 task = new SimulationTask(taskArgs, costumeGraphManager, workingDirectory,
-                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget);
+                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget,
+                        maxParallelism);
                 break;
             case COMPILATION:
                 task = new CompilationTask(taskArgs, costumeGraphManager, workingDirectory,
-                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget);
+                        costumeGraphManager.getSerialSetManager(), finishedTargetLog, finishedTarget,
+                        maxParallelism);
                 break;
         }
+    }
+
+    public void setNumberOfThreads(Integer value) {
+        if (task != null)
+            task.changeNumberOfThreads(value);
     }
     //--------------------------------------------------- run task ---------------------------------------------------//
 
@@ -451,6 +469,45 @@ public class Execution implements Engine, Serializable {
     public List<String> getAllTargetNames() {
 
         return graphManager.getAllNamesOfTargets();
+    }
+
+    @Override
+    public List<String> getSerialSetList() {
+        return new ArrayList<>(graphManager.getSerialSetManager().getSerialSetMap().keySet());
+    }
+
+    @Override
+    public List<String> getSerialSetTarget(String serialSetName) {
+        return graphManager.getSerialSetManager().getSerialSetMap().get(serialSetName).getTargetInSerialSet();
+    }
+
+    @Override
+    public List<String> getInfoAboutTargetInExecution(String targetName, Target.TargetState targetState) {
+        List<String> info = new ArrayList<>();
+        info.add(targetName);//0
+        info.add(costumeGraphManager.getTypeOf(targetName).toString());//1
+        info.add(String.join(",", graphManager.getTargetSerialSets(targetName)));//2
+        info.add(targetState.toString());//3
+        switch (targetState) {
+            case WAITING:
+                long waiting = System.currentTimeMillis() - task.getWaitingStartTime(targetName);
+                info.add(TimeUtil.ltd(waiting));
+                break;
+            case IN_PROCESS:
+                long processing = System.currentTimeMillis() - task.getProcessStartTime(targetName);
+                info.add(TimeUtil.ltd(processing));
+                break;
+            case SKIPPED:
+            case FROZEN:
+                info.add(String.join(",", costumeGraphManager.getDependsOnOfByName(targetName)));
+                break;
+            case SUCCESS:
+            case WARNING:
+            case FAILURE:
+                info.add(targetState.toString());
+                break;
+        }
+        return info;
     }
     //------------------------------------------------ ctor and utils ------------------------------------------------//
 

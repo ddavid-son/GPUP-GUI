@@ -20,9 +20,9 @@ public class SimulationTask extends Task implements Serializable {
 
     public SimulationTask(TaskArgs taskArgs, GraphManager graphManager, String pathToLogFile,
                           SerialSetManger serialSetManager, Consumer<accumulatorForWritingToFile> finishedTargetLog,
-                          Consumer<ProgressDto> finishedTarget) {
+                          Consumer<ProgressDto> finishedTarget, int maxParallelism) {
         super(false, serialSetManager, taskArgs.getNumOfThreads(), graphManager, pathToLogFile
-                , finishedTargetLog, finishedTarget);
+                , finishedTargetLog, finishedTarget, maxParallelism);
         SimulationArgs simulationArgs = (SimulationArgs) taskArgs;
         this.random = new Random();
         this.isRandom = simulationArgs.isRandom();
@@ -66,6 +66,7 @@ public class SimulationTask extends Task implements Serializable {
         try {
             if (isRandom) {
                 int randomNumberToWait = random.nextInt(msToRun);
+                resOfTargetTaskRun.outPutData.add(" * task was ran by thread: " + Thread.currentThread().getName());
                 resOfTargetTaskRun.outPutData.add("  * going to sleep for " + TimeUtil.ltd(randomNumberToWait));
 
                 resOfTargetTaskRun.outPutData.add("  * going to sleep, good night " + ts.toString().substring(10));

@@ -4,6 +4,7 @@ import app.circleDisplay.CircleDisplayController;
 import app.findAllPaths.FindAllPathsController;
 import app.graphTableView.GraphTableViewController;
 import app.relatedView.RelatedViewController;
+import app.serialSet.SerialSetController;
 import app.sideMenu.SideMenuController;
 import app.taskView.TaskViewController;
 import backend.Engine;
@@ -49,17 +50,29 @@ public class AppController {
     BorderPane mainScreen;
     ScrollPane taskViewScreen;
 
-    //@FXML
-    //private TaskViewController taskViewController;
+    public String theme = "theme1";
+    public String themeCSSPath = "/resources/css/theme1.css";
 
     public List<String> targetFromPreviousRun;
 
 
     private final Engine execution = new Execution();
-    private final String FIND_ALL_PATHS_FXML_FILE = "/resources/findAllPaths.fxml";
-    private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/circleDisplay.fxml";
+    private final String FIND_ALL_PATHS_FXML_FILE = "/resources/fxml/findAllPaths.fxml";
+    private final String CIRCLE_DISPLAY_FXML_FILE = "/resources/fxml/circleDisplay.fxml";
 
     private File activeFile;
+    private ScrollPane serialSetScreen;
+
+    public void setThemeCSSPath(String themeCSSPath) {
+        this.themeCSSPath = themeCSSPath;
+        sideMenuComponentController.setThemeCSSPath(themeCSSPath);
+        graphTableViewComponentController.setThemeCSSPath(themeCSSPath);
+
+        // set new css to this scene
+        graphTableViewComponent.getScene().getStylesheets().clear();
+        graphTableViewComponent.getScene().getStylesheets().add(themeCSSPath);
+
+    }
 
     @FXML
     public void initialize() {
@@ -82,7 +95,10 @@ public class AppController {
             graphTableViewComponentController.setAllComponentsToEnabled();
             graphTableViewComponentController.loadGraphToTableView(execution.getInfoAboutAllTargets());
             graphTableViewComponentController.loadSummaryToTableView(execution.getGraphInfo());
-            mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+            if (mainScreen == null) {
+                mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
+            }
+            serialSetScreen = null;
             activeFile = selectedFile;
         } catch (IllegalArgumentException e) {
             handleErrors(
@@ -118,6 +134,7 @@ public class AppController {
             FindAllPathsController PathFindPopUpWindow = fxmlLoader.getController();
             PathFindPopUpWindow.setAppController(this);
 
+            root.getStylesheets().add(themeCSSPath);
             PathFindPopUpWindow.loadComboBoxes(execution.getAllTargetNames(), execution);
 
             Stage stage = new Stage();
@@ -139,7 +156,9 @@ public class AppController {
             CircleDisplayController circleDisplay = fxmlLoader.getController();
             circleDisplay.setAppController(this);
 
+            root.getStylesheets().add(themeCSSPath);
             circleDisplay.displayCircles(execution.getAllTargetNames(), execution);
+
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -167,13 +186,14 @@ public class AppController {
     public void displayRelated() {
         try {
             FXMLLoader fxmlLoader = new FXMLLoader();
-            URL url = getClass().getResource("/resources/relatedView.fxml");
+            URL url = getClass().getResource("/resources/fxml/relatedView.fxml");
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load(url.openStream());
             RelatedViewController relatedViewController = fxmlLoader.getController();
             relatedViewController.setAppController(this, execution);
 
             relatedViewController.loadTargetList();
+            root.getStylesheets().add(themeCSSPath);
 
             Stage stage = new Stage();
             stage.initModality(Modality.APPLICATION_MODAL);
@@ -183,8 +203,6 @@ public class AppController {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-
     }
 
     public boolean taskHasTargetsSelected() {
@@ -228,22 +246,6 @@ public class AppController {
         return targetNames.stream().distinct().collect(Collectors.toList());
     }
 
-  /*  private void delegateExecutionOfTaskToAnotherThread(TaskArgs taskArgs) {
-        Thread thread = new Thread(() -> {
-            try {
-                execution.runTaskOnGraph(taskArgs);
-            } catch (Exception e) {
-                Platform.runLater(() -> handleErrors(
-                        e,
-                        Arrays.toString(e.getStackTrace()),
-                        "Error running task"));
-            }
-            // TODO: maybe down here will handle the summary data fetching with runLater to update the UI
-        });
-        thread.setName("Task thread");
-        thread.start();
-    }*/
-
     public boolean currentSelectedTargetsAreTheSameAsPreviousRun() {
         List<String> targetNames = graphTableViewComponentController.getSelectedTargetNames();
         return targetNames.equals(targetFromPreviousRun);
@@ -265,11 +267,8 @@ public class AppController {
         }
     }
 
-
     //----------------------------------------------- task view ----------------------------------------------------- //
     public void goToTaskView(TaskArgs taskArgs) {
-        if (taskViewScreen == null)
-            this.mainScreen = (BorderPane) graphTableViewComponent.getScene().getRoot();
         if (!taskArgs.isIncremental())
             createNewTaskController(taskArgs);
         // replace the center of the main screen with the task view
@@ -284,17 +283,45 @@ public class AppController {
 
     private void createNewTaskController(TaskArgs taskArgs) {
         try {
-            URL url = getClass().getResource("/resources/TaskView.fxml");
+            URL url = getClass().getResource("/resources/fxml/TaskView.fxml");
             FXMLLoader fxmlLoader = new FXMLLoader(url);
             fxmlLoader.setLocation(url);
             Parent root = fxmlLoader.load();
             taskViewController = fxmlLoader.getController();
 
+            root.getStylesheets().add(themeCSSPath);
             taskViewController.setAppController(this, execution);
             taskViewController.setTaskView(taskArgs);
             this.taskViewScreen = (ScrollPane) root;
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void showSerialSetSummary() {
+        if (serialSetScreen == null)
+            createSerialSet();
+        if (mainScreen.getRight() == serialSetScreen)
+            mainScreen.setRight(null);
+        else
+            mainScreen.setRight(serialSetScreen);
+    }
+
+    private void createSerialSet() {
+        try {
+            URL url = getClass().getResource("/resources/fxml/serialSetView.fxml");
+            FXMLLoader fxmlLoader = new FXMLLoader(url);
+            fxmlLoader.setLocation(url);
+            Parent root = fxmlLoader.load();
+            SerialSetController serialSetController = fxmlLoader.getController();
+
+            root.getStylesheets().add(themeCSSPath);
+            serialSetController.setAppController(this, execution);
+            serialSetController.setSerialSet();
+
+            this.serialSetScreen = (ScrollPane) root;
+        } catch (IOException e) {
+            //e.printStackTrace();
         }
     }
 
@@ -308,6 +335,18 @@ public class AppController {
 
     public void resetListOnTaskView(boolean isIncremental) {
         taskViewController.resetAllLists(isIncremental);
+    }
+
+    public void resumeExecution() {
+        execution.resumeTask();
+    }
+
+    public void pauseExecution() {
+        execution.pauseTask();
+    }
+
+    public void setNumberOfThreads(Integer value) {
+        execution.setNumberOfThreads(value);
     }
     //----------------------------------------------- task view ----------------------------------------------------- //
 }

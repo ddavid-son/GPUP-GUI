@@ -63,7 +63,6 @@ public class RelatedViewController {
         targetListView.getItems().addAll(execution.getAllTargetNames());
         targetListView.setPlaceholder(new Text("No targets found"));
         targetListView.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Selection changed - inside");
             whatIfSelection = execution.getWhatIf(newValue, relationType);
             whatIfList.getItems().setAll(filterNonImmediateCB.isSelected() ?
                     whatIfSelection.getAllImmediate() :
@@ -71,7 +70,6 @@ public class RelatedViewController {
         });
 
         filterNonImmediateCB.selectedProperty().addListener((observable, oldValue, newValue) -> {
-            System.out.println("Selection changed hhh");
             if (newValue) {
                 whatIfList.getItems().setAll(whatIfSelection.getAllImmediate());
             } else {

@@ -21,7 +21,14 @@ public class TaskCircle {
         targetName.resize(90, 30);
         circle = new Circle(50, Paint.valueOf("BLUE"));
         transparentBtn = new Button();
-        transparentBtn.resize(80, 80);
+        transparentBtn.setMinHeight(80);
+        transparentBtn.setPrefHeight(80);
+        transparentBtn.setMaxHeight(80);
+
+        transparentBtn.setMinWidth(80);
+        transparentBtn.setPrefWidth(80);
+        transparentBtn.setMaxWidth(80);
+
         transparentBtn.opacityProperty().setValue(0);
         stackPane.getChildren().add(circle);
         stackPane.getChildren().add(targetName);
