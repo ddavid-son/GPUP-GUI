@@ -10,6 +10,7 @@
 - [How To Use](#how-to-use)
 - [Technologies](#technologies)
 - [My Info](#my-info)
+- [Photos](#photos)
 ***
 
 
@@ -44,6 +45,21 @@ Tasks can be, for example: compilation task, testing task etc...
     - live feedback will be given in a log-view in the right part of the screen with more detailed information about every target + all the logs will be saved in the file system as well under a folder carrying the name and date of the task creation
     - <B>specific target information:</B> in case the user wants to know even more details about a specific target he can click on it and the system will provide him even more details about it.
     <br />
+
+[Back To The Top](#table-of-contents)
+***
+
+### Photos
+The GPUP dashboard:
+<img src="https://i.ibb.co/02v2QpP/GPUP-GUI-DASHBOARD.png" alt="GPUP-GUI-DASHBOARD" border="0">
+Form to set the task:
+<img src="https://i.ibb.co/xh7XDJ7/GPUP-GUI-TASK-PARM.png" alt="GPUP-GUI-TASK-PARM" border="0">
+The task control screen:
+<img src="https://i.ibb.co/pQY2RM6/gpup-gui-task-control.png" alt="gpup-gui-task-control"  border="0">
+Peek of the Serial Set:
+<img src="https://i.ibb.co/QDxQ021/gpup-gui-serial-set.png" alt="gpup-gui-serial-set" border="0">
+Visualize the graph in a photo:
+<img src="https://i.ibb.co/RCnX58C/graph.png" alt="graph" border="0">
 
 [Back To The Top](#table-of-contents)
 ***
