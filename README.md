@@ -50,16 +50,16 @@ Tasks can be, for example: compilation task, testing task etc...
 ***
 
 ### Photos
-The GPUP dashboard:
-<img src="https://i.ibb.co/02v2QpP/GPUP-GUI-DASHBOARD.png" alt="GPUP-GUI-DASHBOARD" border="0">
-Form to set the task:
-<img src="https://i.ibb.co/xh7XDJ7/GPUP-GUI-TASK-PARM.png" alt="GPUP-GUI-TASK-PARM" border="0">
-The task control screen:
-<img src="https://i.ibb.co/pQY2RM6/gpup-gui-task-control.png" alt="gpup-gui-task-control"  border="0">
-Peek of the Serial Set:
-<img src="https://i.ibb.co/QDxQ021/gpup-gui-serial-set.png" alt="gpup-gui-serial-set" border="0">
-Visualize the graph in a photo:
-<img src="https://i.ibb.co/RCnX58C/graph.png" alt="graph" border="0">
+The GPUP dashboard:<br>
+<img src="https://i.ibb.co/02v2QpP/GPUP-GUI-DASHBOARD.png" alt="GPUP-GUI-DASHBOARD" border="0"><br>
+Form to set the task:<br>
+<img src="https://i.ibb.co/xh7XDJ7/GPUP-GUI-TASK-PARM.png" alt="GPUP-GUI-TASK-PARM" border="0"><br>
+The task control screen:<br>
+<img src="https://i.ibb.co/pQY2RM6/gpup-gui-task-control.png" alt="gpup-gui-task-control"  border="0"><br>
+Peek of the Serial Set:<br>
+<img src="https://i.ibb.co/QDxQ021/gpup-gui-serial-set.png" alt="gpup-gui-serial-set" border="0"><br>
+Visualize the graph in a photo:<br>
+<img src="https://i.ibb.co/RCnX58C/graph.png" alt="graph" border="0"><br>
 
 [Back To The Top](#table-of-contents)
 ***
