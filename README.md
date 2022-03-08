@@ -11,6 +11,7 @@
 - [Technologies](#technologies)
 - [My Info](#my-info)
 - [Photos](#photos)
+- [See the client-server version](https://github.com/ddavid-son/G.P.U.P-Web)
 ***
 
 
